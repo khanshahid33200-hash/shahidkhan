@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import heroPhoto from './assets/hero.png';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { initMetaPixel, trackPixelEvent } from './metaPixel';
 import { 
   Sun, 
@@ -452,6 +453,11 @@ export default function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return localStorage.getItem('admin_session') === 'true';
   });
+  const [adminAuthMode, setAdminAuthMode] = useState('login'); // 'login' | 'signup'
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminUser, setAdminUser] = useState(null);
+  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
   const [adminPassError, setAdminPassError] = useState(false);
   const [adminTab, setAdminTab] = useState('leads');
@@ -461,7 +467,22 @@ export default function App() {
   });
   const [loadingLeads, setLoadingLeads] = useState(false);
 
+  // Firebase Auth State Listener
+  useEffect(() => {
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setIsAdminAuthenticated(true);
+          setAdminUser(user);
+          localStorage.setItem('admin_session', 'true');
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
+
   // Ticket Submission & Visitor Tracking States
+  const [activeLegalModal, setActiveLegalModal] = useState(null); // 'privacy' | 'refund' | 'terms'
   const [submittedTicketId, setSubmittedTicketId] = useState('');
   const [successModalData, setSuccessModalData] = useState(null);
   const [trackingInput, setTrackingInput] = useState('');
@@ -720,21 +741,49 @@ export default function App() {
     );
   };
 
-  // Admin Passcode Authentication
-  const handleAdminLogin = (e) => {
+  // Firebase Auth (Email & Password) & Fallback Passcode Login / Sign Up Handler
+  const handleAdminFirebaseAuth = async (e) => {
     e.preventDefault();
-    if (adminPasscode === 'admin123' || adminPasscode === 'shahid2026') {
-      setIsAdminAuthenticated(true);
-      localStorage.setItem('admin_session', 'true');
-      setAdminPassError(false);
+    setAdminAuthLoading(true);
+    setAdminPassError(false);
+
+    try {
+      if (adminAuthMode === 'signup') {
+        const userCredential = await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+        setAdminUser(userCredential.user);
+        setIsAdminAuthenticated(true);
+        localStorage.setItem('admin_session', 'true');
+        alert(`🎉 Admin Account Created Successfully for ${userCredential.user.email}!`);
+      } else {
+        const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+        setAdminUser(userCredential.user);
+        setIsAdminAuthenticated(true);
+        localStorage.setItem('admin_session', 'true');
+      }
       fetchLeads();
-    } else {
-      setAdminPassError(true);
+    } catch (err) {
+      console.warn("Firebase Auth attempt error:", err);
+      // Fallback check if user enters passcode into password or passcode field
+      if (adminPassword === 'admin123' || adminPassword === 'shahid2026' || adminPasscode === 'admin123' || adminPasscode === 'shahid2026' || adminEmail === 'admin123') {
+        setIsAdminAuthenticated(true);
+        localStorage.setItem('admin_session', 'true');
+        setAdminPassError(false);
+        fetchLeads();
+      } else {
+        const errMsg = err.message ? err.message.replace('Firebase: ', '').replace('Error (auth/', '').replace(').', '') : "Failed to authenticate with Firebase Auth";
+        setAdminPassError(errMsg);
+      }
+    } finally {
+      setAdminAuthLoading(false);
     }
   };
 
-  const handleAdminLogout = () => {
+  const handleAdminLogout = async () => {
+    try {
+      if (auth) await signOut(auth);
+    } catch (e) {}
     setIsAdminAuthenticated(false);
+    setAdminUser(null);
     localStorage.removeItem('admin_session');
     navigateTo('home');
   };
@@ -2347,41 +2396,94 @@ export default function App() {
               className="py-12 max-w-7xl mx-auto px-6"
             >
               {!isAdminAuthenticated ? (
-                /* SECRET ADMIN LOGIN BOX */
-                <div className="max-w-md mx-auto py-12">
-                  <div className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl text-center space-y-6">
-                    <div className="w-12 h-12 rounded-2xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mx-auto">
-                      <Lock className="w-6 h-6" />
+                /* FIREBASE AUTH ADMIN LOGIN & SIGNUP PORTAL */
+                <div className="max-w-md mx-auto py-8">
+                  <div className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl space-y-6">
+                    
+                    <div className="text-center space-y-2">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center mx-auto shadow-md">
+                        <Lock className="w-6 h-6" />
+                      </div>
+                      <h1 className="font-display text-2xl font-extrabold text-[var(--text-primary)]">Firebase Admin Auth</h1>
+                      <p className="text-xs text-[var(--text-secondary)]">Create username & password or login to manage growth OS.</p>
                     </div>
 
-                    <div>
-                      <h1 className="font-display text-2xl font-extrabold text-[var(--text-primary)]">Secret Admin Login</h1>
-                      <p className="text-xs text-[var(--text-secondary)] mt-1">Enter passcode to manage website content, portfolio, & leads.</p>
+                    {/* Auth Mode Tabs (Sign In vs Create Account) */}
+                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-color)] text-xs font-heading font-bold text-center">
+                      <button
+                        type="button"
+                        onClick={() => { setAdminAuthMode('login'); setAdminPassError(false); }}
+                        className={`py-2 rounded-xl transition-all cursor-pointer ${
+                          adminAuthMode === 'login' 
+                            ? 'bg-emerald-800 text-white shadow-md' 
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                        }`}
+                      >
+                        🔑 Sign In
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setAdminAuthMode('signup'); setAdminPassError(false); }}
+                        className={`py-2 rounded-xl transition-all cursor-pointer ${
+                          adminAuthMode === 'signup' 
+                            ? 'bg-emerald-800 text-white shadow-md' 
+                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                        }`}
+                      >
+                        ✨ Create Admin
+                      </button>
                     </div>
 
-                    <form onSubmit={handleAdminLogin} className="space-y-4">
+                    <form onSubmit={handleAdminFirebaseAuth} className="space-y-4">
                       {adminPassError && (
-                        <p className="text-xs font-bold text-red-500 bg-red-500/10 p-2.5 rounded-xl border border-red-500/20">
-                          Incorrect admin passcode! (Default: admin123)
-                        </p>
+                        <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center">
+                          {adminPassError}
+                        </div>
                       )}
 
-                      <input 
-                        type="password" 
-                        value={adminPasscode}
-                        onChange={(e) => setAdminPasscode(e.target.value)}
-                        placeholder="Enter Passcode..." 
-                        required
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-center text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
-                      />
+                      <div>
+                        <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Admin Email / Username *</label>
+                        <input 
+                          type="email" 
+                          value={adminEmail}
+                          onChange={(e) => setAdminEmail(e.target.value)}
+                          placeholder="admin@shahidkhan.site" 
+                          required
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Admin Password *</label>
+                        <input 
+                          type="password" 
+                          value={adminPassword}
+                          onChange={(e) => setAdminPassword(e.target.value)}
+                          placeholder="Enter Password..." 
+                          required
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                        />
+                      </div>
 
                       <button 
                         type="submit" 
-                        className="w-full py-3 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+                        disabled={adminAuthLoading}
+                        className="w-full py-3.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
                       >
-                        Unlock Admin Control Panel
+                        {adminAuthLoading ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : adminAuthMode === 'signup' ? (
+                          'Create Firebase Admin Account ↗'
+                        ) : (
+                          'Unlock Admin Dashboard ↗'
+                        )}
                       </button>
                     </form>
+
+                    <div className="pt-2 text-center border-t border-[var(--border-color)] text-[11px] text-[var(--text-muted)] font-mono">
+                      <span>Firebase Auth Identity Engine • Passcode fallback enabled</span>
+                    </div>
+
                   </div>
                 </div>
               ) : (
@@ -3327,7 +3429,111 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* FOOTER WITH CLEAN PATH LINKS */}
+      {/* LEGAL POLICY MODAL (PRIVACY POLICY, REFUND POLICY, TERMS & CONDITIONS) */}
+      <AnimatePresence>
+        {activeLegalModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveLegalModal(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="relative w-full max-w-2xl rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 sm:p-8 shadow-2xl z-10 max-h-[85vh] overflow-y-auto space-y-5 text-[var(--text-primary)]"
+            >
+              <button 
+                onClick={() => setActiveLegalModal(null)}
+                className="absolute top-5 right-5 p-2 rounded-full border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {activeLegalModal === 'privacy' && (
+                <div className="space-y-4">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    LEGAL COMPLIANCE
+                  </span>
+                  <h2 className="font-display text-2xl font-extrabold">Privacy Policy</h2>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Last updated: August 2026. At Shahid Khan Digital Marketing ("we", "our"), we respect your privacy and are committed to protecting your personal information.
+                  </p>
+                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed">
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">1. Information Collection</h3>
+                    <p>We collect personal information that you voluntarily provide when submitting inquiry forms, booking strategy sessions, or contacting us via WhatsApp or email. This includes your name, business name, phone number, email address, and monthly ad budget.</p>
+
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">2. Use of Information</h3>
+                    <p>Your details are strictly used to evaluate your campaign requirements, deliver client consultations, send automated status notifications via Resend API, and manage ad accounts on Meta & Google Ads platforms.</p>
+
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">3. Data Security & Third Parties</h3>
+                    <p>We never sell, rent, or trade your personal information to third parties. Data is safely stored within encrypted Firebase Firestore databases and serverless endpoints.</p>
+                  </div>
+                </div>
+              )}
+
+              {activeLegalModal === 'refund' && (
+                <div className="space-y-4">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    SERVICE GUARANTEE
+                  </span>
+                  <h2 className="font-display text-2xl font-extrabold">Refund Policy</h2>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Last updated: August 2026. We strive to maintain 100% transparency regarding retainer fees and marketing strategy setups.
+                  </p>
+                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed">
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">1. Ad Management Retainer Refunds</h3>
+                    <p>100% of management fees are refundable if requested prior to the commencement of market research, pixel setup, or ad account configuration (within 48 hours of invoice payment).</p>
+
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">2. Ad Spend on Ad Networks</h3>
+                    <p>Ad spend paid directly to ad platforms (Meta Ads, Google Ads) is non-refundable as funds are consumed directly by advertising networks for ad impressions and clicks.</p>
+
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">3. Dispute & Processing Timeline</h3>
+                    <p>Approved refund requests are processed within 5 to 7 business days via the original payment method (Razorpay / Bank Transfer).</p>
+                  </div>
+                </div>
+              )}
+
+              {activeLegalModal === 'terms' && (
+                <div className="space-y-4">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    TERMS OF SERVICE
+                  </span>
+                  <h2 className="font-display text-2xl font-extrabold">Terms & Conditions</h2>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Last updated: August 2026. By utilizing our performance marketing and web development services, you agree to the following terms.
+                  </p>
+                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed">
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">1. Scope of Services</h3>
+                    <p>Shahid Khan provides Meta & Google advertising management, sales funnel architecture, landing page optimization, and lead automation services as agreed upon in campaign proposals.</p>
+
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">2. Client Responsibilities</h3>
+                    <p>Clients are required to provide necessary access to ad accounts, Business Managers, and brand assets. Ad budgets must be funded directly by the client in their respective ad accounts.</p>
+
+                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">3. Performance Disclaimer</h3>
+                    <p>While we apply industry-proven targeting and conversion funnels, overall campaign revenue depends on product market fit, sales team follow-up speed, and external market factors.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-[var(--border-color)] flex justify-end">
+                <button
+                  onClick={() => setActiveLegalModal(null)}
+                  className="px-5 py-2 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-bold shadow-md cursor-pointer"
+                >
+                  Close Legal Document
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* FOOTER WITH PRIVACY, REFUND POLICY & TERMS AND CONDITIONS */}
       <footer className="py-8 border-t border-[var(--border-color)] bg-[var(--bg-primary)]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           
@@ -3350,10 +3556,12 @@ export default function App() {
             <button onClick={() => navigateTo('contact')} className="hover:text-[var(--text-primary)] cursor-pointer">Contact</button>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-bold text-[var(--text-primary)]">
-            <a href="https://shahidkhan.site" target="_blank" rel="noreferrer" className="hover:underline">shahidkhan.site</a>
+          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-[var(--text-secondary)]">
+            <button onClick={() => setActiveLegalModal('privacy')} className="hover:text-[var(--text-primary)] cursor-pointer transition-colors">Privacy Policy</button>
             <span>•</span>
-            <a href="https://github.com/khanshahid33200-hash" target="_blank" rel="noreferrer" className="hover:underline">GitHub</a>
+            <button onClick={() => setActiveLegalModal('refund')} className="hover:text-[var(--text-primary)] cursor-pointer transition-colors">Refund Policy</button>
+            <span>•</span>
+            <button onClick={() => setActiveLegalModal('terms')} className="hover:text-[var(--text-primary)] cursor-pointer transition-colors">Terms & Conditions</button>
           </div>
 
         </div>
