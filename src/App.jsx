@@ -129,12 +129,12 @@ export default function App() {
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [cursorHovered, setCursorHovered] = useState(false);
 
-  // Scroll driven animation: Hero photo reduces in size and travels DOWN (+Y direction) into next section!
+  // Scroll driven animation: Hero photo reduces in size and travels DOWN into next section
   const { scrollY } = useScroll();
-  const photoScale = useTransform(scrollY, [0, 600], [1, 0.72]);
-  const photoY = useTransform(scrollY, [0, 600], [0, 220]); // Travels down into next section
-  const photoRotateY = useTransform(scrollY, [0, 600], [0, 10]);
-  const photoRotateZ = useTransform(scrollY, [0, 600], [0, 2]);
+  const photoScale = useTransform(scrollY, [0, 500], [1, 0.72]);
+  const photoY = useTransform(scrollY, [0, 500], [0, 160]); // Compact downward travel
+  const photoRotateY = useTransform(scrollY, [0, 500], [0, 8]);
+  const photoRotateZ = useTransform(scrollY, [0, 500], [0, 2]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -397,18 +397,18 @@ export default function App() {
 
       {/* STICKY HEADER NAV */}
       <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[var(--header-bg)] border-b border-[var(--border-color)] transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
           
           {/* Logo */}
           <a href="#" className="flex items-center gap-3 group">
             <img 
               src="/LOGO.png" 
               alt="Shahid Khan Logo" 
-              className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+              className="h-9 sm:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
             />
             <div className="flex flex-col">
-              <span className="font-heading font-bold text-lg tracking-tight text-[var(--text-primary)]">Shahid Khan</span>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-muted)]">Digital Marketing & Growth Specialist</span>
+              <span className="font-heading font-bold text-base sm:text-lg tracking-tight text-[var(--text-primary)]">Shahid Khan</span>
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-[var(--text-muted)]">Digital Marketing & Growth Specialist</span>
             </div>
           </a>
 
@@ -487,39 +487,39 @@ export default function App() {
       </header>
 
 
-      {/* HERO SECTION (DIGITAL MARKETING FOCUS WITH SCROLL 3D PHOTO ANIMATION DOWNWARD) */}
-      <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 max-w-7xl mx-auto px-6">
+      {/* HERO SECTION (COMPACT HEIGHT & PADDING) */}
+      <section className="relative pt-8 pb-14 md:pt-14 md:pb-16 max-w-7xl mx-auto px-6">
         
         {/* Availability Badge */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-secondary)] mb-8 shadow-sm"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-secondary)] mb-6 shadow-sm"
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>Available for Paid Ad Campaigns & Growth Projects</span>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
           
           {/* Hero Left Column (Marketing Content) */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 space-y-5">
             
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[var(--text-primary)] leading-[1.1]"
+              className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] leading-[1.15]"
             >
-              Scale Your Business with <span className="underline underline-offset-8 decoration-[var(--border-color)]">High-ROAS Digital Marketing</span> & Performance Ads.
+              Scale Your Business with <span className="underline underline-offset-6 decoration-[var(--border-color)]">High-ROAS Digital Marketing</span> & Performance Ads.
             </motion.h1>
 
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-base sm:text-lg text-[var(--text-secondary)] leading-relaxed max-w-2xl"
+              className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed max-w-2xl"
             >
               I help businesses, agencies, NGOs, and retail brands generate high-intent leads, lower customer acquisition costs, and scale revenue through Meta Ads, Google Search & PMax, and high-converting paid funnels.
             </motion.p>
@@ -529,11 +529,11 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap items-center gap-4 pt-2"
+              className="flex flex-wrap items-center gap-4 pt-1"
             >
               <a 
                 href="#contact" 
-                className="px-7 py-4 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-sm font-bold tracking-wide hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl cursor-pointer"
+                className="px-6 py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-md cursor-pointer"
               >
                 <span>Get More Leads & Sales</span>
                 <ArrowUpRight className="w-4 h-4" />
@@ -541,7 +541,7 @@ export default function App() {
 
               <a 
                 href="#projects" 
-                className="px-7 py-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
+                className="px-6 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
               >
                 <span>Explore Marketing Work</span>
                 <ArrowDown className="w-4 h-4" />
@@ -553,7 +553,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="pt-6 flex flex-wrap gap-6 text-xs text-[var(--text-muted)] font-medium border-t border-[var(--border-color)] mt-8"
+              className="pt-4 flex flex-wrap gap-5 text-xs text-[var(--text-muted)] font-medium border-t border-[var(--border-color)] mt-6"
             >
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)]" />
@@ -571,20 +571,20 @@ export default function App() {
 
           </div>
 
-          {/* Hero Right Column (EXCLUSIVELY 3D TILT & SCROLL DOWNWARD TRAVELING PROFILE PHOTO) */}
+          {/* Hero Right Column (3D TILT & SMOOTH DOWNWARD TRAVEL PROFILE PHOTO) */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end perspective-1000">
             <motion.div 
               style={{ 
                 scale: photoScale, 
-                y: photoY, // Travels down smoothly with user scroll!
+                y: photoY, 
                 rotateY: photoRotateY, 
                 rotateZ: photoRotateZ
               }}
               transition={{ type: "spring", stiffness: 200, damping: 22 }}
-              className="w-full max-w-md lg:max-w-lg z-20"
+              className="w-full max-w-sm lg:max-w-md z-20"
             >
               <HeroPhoto3D className="w-full">
-                <div className="rounded-3xl overflow-hidden shadow-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2">
+                <div className="rounded-3xl overflow-hidden shadow-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2">
                   <div className="rounded-2xl overflow-hidden relative">
                     <img 
                       src="/shahid_photo.png" 
@@ -593,12 +593,12 @@ export default function App() {
                       className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-500 transform group-hover:scale-102"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
-                    <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl backdrop-blur-md bg-black/60 border border-white/10 text-white flex items-center justify-between">
+                    <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl backdrop-blur-md bg-black/60 border border-white/10 text-white flex items-center justify-between">
                       <div>
-                        <p className="font-heading font-bold text-sm">Shahid Khan</p>
-                        <p className="text-xs text-neutral-300">Digital Marketer & Growth Strategist</p>
+                        <p className="font-heading font-bold text-xs sm:text-sm">Shahid Khan</p>
+                        <p className="text-[11px] text-neutral-300">Digital Marketer & Growth Strategist</p>
                       </div>
-                      <span className="px-2.5 py-1 rounded-md bg-white/20 text-[10px] font-mono uppercase font-bold tracking-wider">
+                      <span className="px-2 py-0.5 rounded bg-white/20 text-[9px] font-mono uppercase font-bold tracking-wider">
                         META & GOOGLE ADS
                       </span>
                     </div>
@@ -610,13 +610,13 @@ export default function App() {
 
         </div>
 
-        {/* ANIMATED MARKETING STATISTICS SECTION (SCROLL TRIGGERED COUNT-UP) */}
+        {/* ANIMATED MARKETING STATISTICS SECTION */}
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
+          transition={{ duration: 0.5 }}
+          className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4"
         >
           {[
             { label: "Leads Generated", target: 1000, suffix: "+" },
@@ -624,11 +624,11 @@ export default function App() {
             { label: "Brands Scaled", target: 5, suffix: "+" },
             { label: "High ROAS Funnels", target: 20, suffix: "+" }
           ].map((stat, idx) => (
-            <div key={idx} className="p-6 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all shadow-sm">
-              <h3 className="font-display font-extrabold text-3xl sm:text-4xl text-[var(--text-primary)]">
+            <div key={idx} className="p-5 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all shadow-sm">
+              <h3 className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
                 <AnimatedCounter target={stat.target} suffix={stat.suffix} />
               </h3>
-              <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">{stat.label}</p>
+              <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{stat.label}</p>
             </div>
           ))}
         </motion.div>
@@ -636,19 +636,19 @@ export default function App() {
       </section>
 
 
-      {/* ABOUT ME SECTION ("WHO I AM" - DIGITAL MARKETING FOCUS) */}
-      <section id="about" className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+      {/* ABOUT ME SECTION (REDUCED PADDING py-14) */}
+      <section id="about" className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="max-w-3xl mb-12">
+          <div className="max-w-3xl mb-10">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">About Me</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mt-2">Who I Am</h2>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mt-1">Who I Am</h2>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
-            <div className="lg:col-span-7 space-y-6 text-base text-[var(--text-secondary)] leading-relaxed">
-              <p className="font-medium text-lg text-[var(--text-primary)]">
+            <div className="lg:col-span-7 space-y-5 text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">
+              <p className="font-medium text-base text-[var(--text-primary)]">
                 I am <strong className="font-bold">Shahid Khan</strong>, a Performance Digital Marketer and Growth Strategist with extensive experience helping local retail businesses, agencies, non-profits, and startups build profitable digital advertising systems.
               </p>
 
@@ -660,14 +660,14 @@ export default function App() {
                 By combining persuasive marketing copywriting with AI automation (ChatGPT, Claude, n8n) and web technology, I deliver complete end-to-end client acquisition funnels that turn paid traffic into revenue.
               </p>
 
-              <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
-                  <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Location</p>
+                  <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Location</p>
                   <p className="text-xs text-[var(--text-muted)]">Jaipur, Rajasthan, India (Available Globally)</p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
-                  <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Primary Focus</p>
+                  <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Primary Focus</p>
                   <p className="text-xs text-[var(--text-muted)]">Meta & Google Paid Ads + Lead Gen Funnels</p>
                 </div>
               </div>
@@ -676,27 +676,27 @@ export default function App() {
             {/* Highlights Cards */}
             <div className="lg:col-span-5 grid grid-cols-1 gap-4">
               
-              <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3">
-                  <Target className="w-5 h-5" />
+              <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 hover:border-[var(--text-primary)] transition-all shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
+                  <Target className="w-4 h-4" />
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Meta & Google Paid Advertising</h3>
+                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">Meta & Google Paid Advertising</h3>
                 <p className="text-xs text-[var(--text-secondary)]">Strategic audience targeting, creative ad design, A/B testing, and budget scaling focused on maximum Return on Ad Spend (ROAS).</p>
               </div>
 
-              <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3">
-                  <TrendingUp className="w-5 h-5" />
+              <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 hover:border-[var(--text-primary)] transition-all shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
+                  <TrendingUp className="w-4 h-4" />
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Lead Generation & Sales Funnels</h3>
+                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">Lead Generation & Sales Funnels</h3>
                 <p className="text-xs text-[var(--text-secondary)]">Engineered landing pages and lead capture systems built to convert cold paid traffic into pre-qualified sales calls and inquiries.</p>
               </div>
 
-              <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3">
-                  <BarChart3 className="w-5 h-5" />
+              <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 hover:border-[var(--text-primary)] transition-all shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
+                  <BarChart3 className="w-4 h-4" />
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Meta Pixel & Analytics Setup</h3>
+                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">Meta Pixel & Analytics Setup</h3>
                 <p className="text-xs text-[var(--text-secondary)]">Complete conversion tracking via Meta Pixel, CAPI, and GA4 to ensure every dollar of ad spend is measured and optimized.</p>
               </div>
 
@@ -708,31 +708,31 @@ export default function App() {
       </section>
 
 
-      {/* SKILLS SECTION */}
-      <section id="skills" className="py-20 border-t border-[var(--border-color)]">
+      {/* SKILLS SECTION (REDUCED PADDING py-14) */}
+      <section id="skills" className="py-14 border-t border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Capabilities</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Digital Marketing Skills</h2>
-            <p className="text-sm text-[var(--text-secondary)]">A specialized performance marketing toolkit engineered for lead acquisition, ad optimization, and business scaling.</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Digital Marketing Skills</h2>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">A specialized performance marketing toolkit engineered for lead acquisition, ad optimization, and business scaling.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {skillsCategories.map((cat, idx) => (
-              <div key={idx} className="p-8 rounded-3xl glass-card border border-[var(--border-color)] hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+              <div key={idx} className="p-7 rounded-3xl glass-card border border-[var(--border-color)] hover:border-[var(--text-primary)] transition-all shadow-sm">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
                     {cat.icon}
                   </div>
-                  <h3 className="font-heading font-bold text-xl text-[var(--text-primary)]">{cat.title}</h3>
+                  <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">{cat.title}</h3>
                 </div>
 
-                <div className="flex flex-wrap gap-2.5">
+                <div className="flex flex-wrap gap-2">
                   {cat.skills.map((skill, sIdx) => (
                     <span 
                       key={sIdx}
-                      className="px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--text-primary)] transition-colors flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--text-primary)] transition-colors flex items-center gap-1.5"
                     >
                       <Check className="w-3 h-3 text-emerald-500" />
                       <span>{skill}</span>
@@ -747,28 +747,28 @@ export default function App() {
       </section>
 
 
-      {/* MARKETING TECH TOOLS SECTION */}
-      <section className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+      {/* MARKETING TECH TOOLS SECTION (REDUCED PADDING py-14) */}
+      <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Marketing Tech</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Marketing Tools & Platforms</h2>
-            <p className="text-sm text-[var(--text-secondary)]">The industry-standard marketing, tracking, creative, and web technologies I use to launch and scale profitability.</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing Tools & Platforms</h2>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">The industry-standard marketing, tracking, creative, and web technologies I use to launch and scale profitability.</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
             {toolsList.map((tool, idx) => (
-              <div key={idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] hover:-translate-y-1 transition-all cursor-pointer group shadow-sm flex flex-col justify-between h-full">
+              <div key={idx} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] hover:-translate-y-0.5 transition-all cursor-pointer group shadow-sm flex flex-col justify-between h-full">
                 <div>
-                  <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-[var(--text-muted)] block mb-1">
+                  <span className="text-[9px] font-mono uppercase font-bold tracking-wider text-[var(--text-muted)] block mb-1">
                     {tool.category}
                   </span>
-                  <h4 className="font-heading font-bold text-base text-[var(--text-primary)] group-hover:underline">
+                  <h4 className="font-heading font-bold text-sm text-[var(--text-primary)] group-hover:underline">
                     {tool.name}
                   </h4>
                 </div>
-                <p className="text-[11px] text-[var(--text-secondary)] mt-3 leading-tight">
+                <p className="text-[10px] text-[var(--text-secondary)] mt-2 leading-tight">
                   {tool.desc}
                 </p>
               </div>
@@ -779,14 +779,14 @@ export default function App() {
       </section>
 
 
-      {/* FEATURED CAMPAIGNS & PROJECTS SECTION */}
-      <section id="projects" className="py-20 border-t border-[var(--border-color)]">
+      {/* FEATURED CAMPAIGNS & PROJECTS SECTION (REDUCED PADDING py-14) */}
+      <section id="projects" className="py-14 border-t border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-5">
             <div>
               <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Client Success</span>
-              <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mt-1">Featured Campaigns & Projects</h2>
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mt-1">Featured Campaigns & Projects</h2>
             </div>
 
             {/* Filter Tabs */}
@@ -795,7 +795,7 @@ export default function App() {
                 <button
                   key={filter}
                   onClick={() => setActiveProjectFilter(filter)}
-                  className={`px-4 py-2 rounded-full text-xs font-heading font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer ${
                     activeProjectFilter === filter 
                       ? 'bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-md' 
                       : 'border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]'
@@ -808,7 +808,7 @@ export default function App() {
           </div>
 
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
               {filteredProjects.map((project) => (
                 <motion.div
@@ -817,34 +817,34 @@ export default function App() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4 }}
-                  className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 flex flex-col justify-between h-full hover:border-[var(--text-primary)] hover:-translate-y-1 transition-all duration-300 group shadow-sm"
+                  transition={{ duration: 0.3 }}
+                  className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 flex flex-col justify-between h-full hover:border-[var(--text-primary)] transition-all duration-300 group shadow-sm"
                 >
                   <div>
-                    <div className="flex items-center justify-between gap-2 mb-4">
-                      <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
                         {project.location}
                       </span>
                       {project.website && (
-                        <span className="text-xs font-mono text-[var(--text-muted)] flex items-center gap-1">
+                        <span className="text-[11px] font-mono text-[var(--text-muted)] flex items-center gap-1">
                           <Globe className="w-3 h-3" /> {project.website}
                         </span>
                       )}
                     </div>
 
-                    <h3 className="font-heading font-bold text-xl text-[var(--text-primary)] mb-2 group-hover:underline">
+                    <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2 group-hover:underline">
                       {project.title}
                     </h3>
 
-                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-6">
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-5">
                       {project.description}
                     </p>
                   </div>
 
                   <div>
-                    <div className="flex flex-wrap gap-1.5 mb-6 pt-4 border-t border-[var(--border-color)]">
+                    <div className="flex flex-wrap gap-1.5 mb-5 pt-3 border-t border-[var(--border-color)]">
                       {project.services.map((srv, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-md bg-[var(--bg-primary)] text-[10px] font-medium text-[var(--text-secondary)]">
+                        <span key={idx} className="px-2 py-0.5 rounded-md bg-[var(--bg-primary)] text-[10px] font-medium text-[var(--text-secondary)]">
                           {srv}
                         </span>
                       ))}
@@ -855,13 +855,13 @@ export default function App() {
                         href={project.link} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="w-full py-3 rounded-xl border border-[var(--border-dark)] bg-transparent text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider"
+                        className="w-full py-2.5 rounded-xl border border-[var(--border-dark)] bg-transparent text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider"
                       >
                         <span>View Live Platform</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
                       </a>
                     ) : (
-                      <div className="w-full py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-semibold text-[var(--text-muted)] text-center">
+                      <div className="w-full py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-semibold text-[var(--text-muted)] text-center">
                         Active Lead Campaign
                       </div>
                     )}
@@ -875,24 +875,24 @@ export default function App() {
       </section>
 
 
-      {/* WHAT I CAN DO FOR YOU (SERVICES GRID) */}
-      <section id="services" className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+      {/* WHAT I CAN DO FOR YOU (REDUCED PADDING py-14) */}
+      <section id="services" className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Services</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Digital Marketing Services</h2>
-            <p className="text-sm text-[var(--text-secondary)]">Data-driven paid advertising, lead capture funnels, and marketing analytics designed to grow your revenue.</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Digital Marketing Services</h2>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">Data-driven paid advertising, lead capture funnels, and marketing analytics designed to grow your revenue.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {servicesList.map((srv, idx) => (
-              <div key={idx} className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] hover:-translate-y-1 transition-all shadow-sm flex flex-col justify-between h-full">
+              <div key={idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-sm flex flex-col justify-between h-full">
                 <div>
-                  <div className="w-8 h-8 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center font-heading font-bold text-xs mb-4">
+                  <div className="w-7 h-7 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center font-heading font-bold text-[11px] mb-3">
                     {(idx + 1).toString().padStart(2, '0')}
                   </div>
-                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] mb-2">
+                  <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)] mb-1.5">
                     {srv.name}
                   </h3>
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -907,53 +907,53 @@ export default function App() {
       </section>
 
 
-      {/* MARKETING RESULTS & PERFORMANCE SECTION */}
-      <section className="py-20 border-t border-[var(--border-color)]">
+      {/* MARKETING RESULTS & PERFORMANCE SECTION (REDUCED PADDING py-14) */}
+      <section className="py-14 border-t border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-8 sm:p-12 shadow-xl">
-            <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+          <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 sm:p-10 shadow-xl">
+            <div className="text-center max-w-2xl mx-auto mb-8 space-y-1">
               <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Impact</span>
-              <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Measurable Marketing Outcomes</h2>
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Measurable Marketing Outcomes</h2>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 text-center">
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
+              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
+                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
                   <AnimatedCounter target={1000} suffix="+" />
                 </p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Leads Generated</p>
+                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Leads Generated</p>
               </div>
 
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
+                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
                   <AnimatedCounter target={50} suffix="+" />
                 </p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Campaigns Managed</p>
+                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Campaigns Managed</p>
               </div>
 
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
+                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
                   <AnimatedCounter target={5} suffix="+" />
                 </p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Brands Scaled</p>
+                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Brands Scaled</p>
               </div>
 
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
+                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
                   <AnimatedCounter target={20} suffix="+" />
                 </p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">High ROAS Funnels</p>
+                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">High ROAS Funnels</p>
               </div>
 
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">High</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">ROAS Focus</p>
+              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
+                <p className="font-display font-extrabold text-lg sm:text-xl text-[var(--text-primary)]">High</p>
+                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">ROAS Focus</p>
               </div>
 
-              <div className="p-4">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">100%</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Growth Support</p>
+              <div className="p-3">
+                <p className="font-display font-extrabold text-lg sm:text-xl text-[var(--text-primary)]">100%</p>
+                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Growth Support</p>
               </div>
             </div>
           </div>
@@ -962,16 +962,16 @@ export default function App() {
       </section>
 
 
-      {/* WHY CHOOSE ME (ADVANTAGE CARDS) */}
-      <section className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+      {/* WHY CHOOSE ME (REDUCED PADDING py-14) */}
+      <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Why Hire Me</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Marketing First Advantage</h2>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing First Advantage</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               { title: "Meta & Google Ads Focus", desc: "Expertise in structuring high-converting Meta paid ads, Google Search, and PMax campaigns." },
               { title: "Lead Generation Architecture", desc: "Every campaign is built around collecting qualified leads, phone calls, and direct customer inquiries." },
@@ -982,11 +982,11 @@ export default function App() {
               { title: "Affordable & Flexible Models", desc: "Custom campaign packages structured for local businesses, agencies, and non-profits." },
               { title: "AI-Powered Strategy", desc: "Using AI tools (ChatGPT, Claude) for audience research, creative copywriting, and rapid optimization." }
             ].map((item, idx) => (
-              <div key={idx} className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all space-y-2 h-full shadow-sm">
-                <div className="w-8 h-8 rounded-lg bg-[var(--text-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold text-xs">
+              <div key={idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all space-y-1.5 h-full shadow-sm">
+                <div className="w-7 h-7 rounded-lg bg-[var(--text-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold text-[11px]">
                   ✓
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{item.title}</h3>
+                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">{item.title}</h3>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
               </div>
             ))}
@@ -996,23 +996,23 @@ export default function App() {
       </section>
 
 
-      {/* CAMPAIGN WORKFLOW PROCESS */}
-      <section id="process" className="py-20 border-t border-[var(--border-color)]">
+      {/* CAMPAIGN WORKFLOW PROCESS (REDUCED PADDING py-14) */}
+      <section id="process" className="py-14 border-t border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Workflow</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Campaign Process</h2>
-            <p className="text-sm text-[var(--text-secondary)]">A battle-tested 6-step framework for launching profitable digital advertising campaigns.</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Campaign Process</h2>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">A battle-tested 6-step framework for launching profitable digital advertising campaigns.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {processSteps.map((p, idx) => (
-              <div key={idx} className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] relative hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
-                <span className="font-display font-extrabold text-5xl text-[var(--border-color)] block mb-4">
+              <div key={idx} className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] relative hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
+                <span className="font-display font-extrabold text-4xl text-[var(--border-color)] block mb-3">
                   {p.step}
                 </span>
-                <h3 className="font-heading font-bold text-xl text-[var(--text-primary)] mb-2">
+                <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-1.5">
                   {p.title}
                 </h3>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -1026,30 +1026,30 @@ export default function App() {
       </section>
 
 
-      {/* TESTIMONIALS SECTION */}
-      <section className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+      {/* TESTIMONIALS SECTION (REDUCED PADDING py-14) */}
+      <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Feedback</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Client Testimonials</h2>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Client Testimonials</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((t, idx) => (
-              <div key={idx} className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col justify-between hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
-                <div className="space-y-4">
-                  <div className="flex text-amber-500 gap-1 text-sm">
+              <div key={idx} className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col justify-between hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
+                <div className="space-y-3">
+                  <div className="flex text-amber-500 gap-1 text-xs">
                     {"★★★★★"}
                   </div>
-                  <p className="text-sm text-[var(--text-secondary)] italic leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed">
                     "{t.quote}"
                   </p>
                 </div>
 
-                <div className="pt-6 border-t border-[var(--border-color)] mt-6">
-                  <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">{t.author}</h4>
-                  <p className="text-xs text-[var(--text-muted)]">{t.role}</p>
+                <div className="pt-4 border-t border-[var(--border-color)] mt-4">
+                  <h4 className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">{t.author}</h4>
+                  <p className="text-[11px] text-[var(--text-muted)]">{t.role}</p>
                 </div>
               </div>
             ))}
@@ -1059,16 +1059,16 @@ export default function App() {
       </section>
 
 
-      {/* FAQ SECTION (ACCORDION) */}
-      <section id="faq" className="py-20 border-t border-[var(--border-color)]">
+      {/* FAQ SECTION (REDUCED PADDING py-14) */}
+      <section id="faq" className="py-14 border-t border-[var(--border-color)]">
         <div className="max-w-4xl mx-auto px-6">
           
-          <div className="text-center mb-16 space-y-2">
+          <div className="text-center mb-12 space-y-1.5">
             <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Questions</span>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Marketing FAQ</h2>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing FAQ</h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqItems.map((item, idx) => {
               const isOpen = openFaq === idx;
               return (
@@ -1078,10 +1078,10 @@ export default function App() {
                 >
                   <button
                     onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full px-6 py-5 text-left font-heading font-bold text-base text-[var(--text-primary)] flex items-center justify-between gap-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                    className="w-full px-5 py-4 text-left font-heading font-bold text-sm sm:text-base text-[var(--text-primary)] flex items-center justify-between gap-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
                   >
                     <span>{item.q}</span>
-                    <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   <AnimatePresence>
@@ -1090,8 +1090,8 @@ export default function App() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="px-6 pb-6 text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--border-color)] pt-4"
+                        transition={{ duration: 0.25 }}
+                        className="px-5 pb-5 text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--border-color)] pt-3"
                       >
                         {item.a}
                       </motion.div>
@@ -1106,51 +1106,51 @@ export default function App() {
       </section>
 
 
-      {/* CONTACT SECTION ("GROW YOUR REVENUE TODAY") */}
-      <section id="contact" className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] relative">
+      {/* CONTACT SECTION (REDUCED PADDING py-14) */}
+      <section id="contact" className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] relative">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
             {/* Contact Info Left */}
-            <div className="lg:col-span-5 space-y-8">
+            <div className="lg:col-span-5 space-y-6">
               <div>
                 <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Start Scaling</span>
-                <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[var(--text-primary)] mt-2 leading-tight">
+                <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mt-1 leading-tight">
                   Grow Your Business Today
                 </h2>
-                <p className="text-sm text-[var(--text-secondary)] mt-4 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-3 leading-relaxed">
                   Ready to launch high-ROAS Meta/Google ads, capture qualified leads, or build a conversion-focused landing page? Let's discuss your marketing strategy.
                 </p>
               </div>
 
-              <div className="space-y-4 font-medium text-sm">
-                <a href="mailto:contact@shahidkhan.site" className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-4 hover:border-[var(--text-primary)] transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    <Mail className="w-5 h-5" />
+              <div className="space-y-3.5 font-medium text-xs sm:text-sm">
+                <a href="mailto:contact@shahidkhan.site" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                    <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)]">Direct Email</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Direct Email</p>
                     <p className="font-heading font-bold text-[var(--text-primary)]">contact@shahidkhan.site</p>
                   </div>
                 </a>
 
-                <a href="tel:+919587867559" className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-4 hover:border-[var(--text-primary)] transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    <Phone className="w-5 h-5" />
+                <a href="tel:+919587867559" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                    <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)]">Phone / WhatsApp</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Phone / WhatsApp</p>
                     <p className="font-heading font-bold text-[var(--text-primary)]">+91 95878 67559</p>
                   </div>
                 </a>
 
-                <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    <MapPin className="w-5 h-5" />
+                <div className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                    <MapPin className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)]">Location</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Location</p>
                     <p className="font-heading font-bold text-[var(--text-primary)]">Jaipur, Rajasthan, India</p>
                   </div>
                 </div>
@@ -1159,24 +1159,24 @@ export default function App() {
 
             {/* Comprehensive Contact Form Right */}
             <div className="lg:col-span-7">
-              <div className="p-8 sm:p-10 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
+              <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
                 
-                <h3 className="font-heading font-bold text-2xl text-[var(--text-primary)] mb-6">Book a Strategy Session</h3>
+                <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)] mb-5">Book a Strategy Session</h3>
 
-                <form onSubmit={handleContactSubmit} className="space-y-4">
+                <form onSubmit={handleContactSubmit} className="space-y-3.5">
                   
                   {formSubmitted && (
                     <motion.div 
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
+                      className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
                     >
-                      <CheckCircle2 className="w-5 h-5 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
                       <span>Thank you! Your marketing inquiry has been saved to Firebase. I will get back to you shortly.</span>
                     </motion.div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                       <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Name *</label>
                       <input 
@@ -1184,7 +1184,7 @@ export default function App() {
                         name="name" 
                         required 
                         placeholder="Shahid Khan" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                       />
                     </div>
 
@@ -1195,12 +1195,12 @@ export default function App() {
                         name="email" 
                         required 
                         placeholder="you@example.com" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                       <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Phone / WhatsApp *</label>
                       <input 
@@ -1208,7 +1208,7 @@ export default function App() {
                         name="phone" 
                         required
                         placeholder="+91 98765 43210" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                       />
                     </div>
 
@@ -1218,18 +1218,18 @@ export default function App() {
                         type="text" 
                         name="businessName" 
                         placeholder="Company or Brand Name" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                       <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Marketing Service *</label>
                       <select 
                         name="serviceRequired"
                         required
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                       >
                         <option value="">Select Primary Goal...</option>
                         <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
@@ -1245,7 +1245,7 @@ export default function App() {
                       <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget</label>
                       <select 
                         name="budget"
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                       >
                         <option value="Flexible">Flexible / Discuss Strategy</option>
                         <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
@@ -1258,18 +1258,18 @@ export default function App() {
                   <div>
                     <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Project Details *</label>
                     <textarea 
-                      rows={4} 
+                      rows={3} 
                       name="message" 
                       required 
                       placeholder="Tell me about your product, current ad campaigns, or lead generation goals..." 
-                      className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                     ></textarea>
                   </div>
 
                   <button 
                     type="submit" 
                     disabled={submitting}
-                    className="w-full py-4 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                    className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md"
                   >
                     <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
                   </button>
@@ -1290,7 +1290,7 @@ export default function App() {
         href="https://wa.me/919587867559?text=Hello%20Shahid,%20I%20want%20to%20discuss%20a%20digital%20marketing%20campaign%20for%20my%20business." 
         target="_blank" 
         rel="noreferrer"
-        className="fixed bottom-6 right-6 z-40 p-4 rounded-full bg-emerald-600 text-white shadow-2xl hover:scale-110 transition-transform duration-300 flex items-center gap-2 group cursor-pointer"
+        className="fixed bottom-6 right-6 z-40 p-3.5 rounded-full bg-emerald-600 text-white shadow-2xl hover:scale-110 transition-transform duration-300 flex items-center gap-2 group cursor-pointer"
         aria-label="Chat on WhatsApp"
       >
         <MessageSquare className="w-5 h-5" />
@@ -1299,21 +1299,21 @@ export default function App() {
 
 
       {/* FOOTER */}
-      <footer className="py-12 border-t border-[var(--border-color)] bg-[var(--bg-primary)]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <footer className="py-8 border-t border-[var(--border-color)] bg-[var(--bg-primary)]">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           
           <div className="flex items-center gap-3">
             <img 
               src="/LOGO.png" 
               alt="Shahid Khan Logo" 
-              className="h-8 w-auto object-contain" 
+              className="h-7 w-auto object-contain" 
             />
-            <p className="text-xs font-semibold text-[var(--text-secondary)]">
+            <p className="text-[11px] font-semibold text-[var(--text-secondary)]">
               © {new Date().getFullYear()} Shahid Khan. Digital Marketing Specialist & Growth Strategist.
             </p>
           </div>
 
-          <div className="flex items-center gap-6 text-xs font-medium text-[var(--text-secondary)]">
+          <div className="flex items-center gap-5 text-xs font-medium text-[var(--text-secondary)]">
             <a href="#about" className="hover:text-[var(--text-primary)]">About</a>
             <a href="#skills" className="hover:text-[var(--text-primary)]">Skills</a>
             <a href="#services" className="hover:text-[var(--text-primary)]">Services</a>
@@ -1321,7 +1321,7 @@ export default function App() {
             <a href="#contact" className="hover:text-[var(--text-primary)]">Contact</a>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-bold text-[var(--text-primary)]">
+          <div className="flex items-center gap-3 text-xs font-bold text-[var(--text-primary)]">
             <a href="https://shahidkhan.site" target="_blank" rel="noreferrer" className="hover:underline">shahidkhan.site</a>
             <span>•</span>
             <a href="https://github.com/khanshahid33200-hash" target="_blank" rel="noreferrer" className="hover:underline">GitHub</a>
