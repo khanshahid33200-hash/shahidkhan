@@ -548,12 +548,13 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // Submit Contact & Application Form
-  const handleContactSubmit = async (e) => {
+  // Ultra-Fast Instant Contact & Application Form Submission
+  const handleContactSubmit = (e) => {
     e.preventDefault();
     setSubmitting(true);
 
-    const formData = new FormData(e.target);
+    const formElement = e.target;
+    const formData = new FormData(formElement);
     const name = formData.get('name') || '';
     const email = formData.get('email') || '';
     const phone = formData.get('phone') || '';
@@ -579,7 +580,7 @@ export default function App() {
       dateFormatted
     };
 
-    // 1. Instantly save to LocalStorage so lead is NEVER lost
+    // 1. Instant Local Persistence & UI Feedback (Instant - No waiting!)
     try {
       const existingLeads = JSON.parse(localStorage.getItem('site_leads') || '[]');
       const updatedLeads = [localLead, ...existingLeads];
@@ -589,31 +590,29 @@ export default function App() {
       console.warn("LocalStorage lead save notice:", err);
     }
 
-    // 2. Safely attempt Firestore save
-    try {
-      if (db) {
-        await addDoc(collection(db, "contacts"), localLead);
-      }
-    } catch (err) {
-      console.warn("Firestore backup save notice:", err);
+    setSubmitting(false);
+    setFormSubmitted(true);
+    formElement.reset();
+    setTimeout(() => setFormSubmitted(false), 6000);
+
+    // 2. Background Async Firebase Firestore Upload (Non-blocking)
+    if (db) {
+      addDoc(collection(db, "contacts"), localLead)
+        .then(docRef => console.log("Firebase Firestore upload success! Doc ID:", docRef.id))
+        .catch(err => console.warn("Firebase Firestore upload notice:", err));
     }
 
-    // 3. Trigger Meta Pixel Lead Event
+    // 3. Background Async Meta Pixel Tracking
     trackPixelEvent('Lead', {
       content_name: serviceRequired || 'Digital Marketing Inquiry',
       value: 1.00,
       currency: 'USD'
     });
 
-    // 4. Trigger Automated Confirmation Email via Resend
+    // 4. Background Async Resend Email Dispatch
     if (email) {
       sendResendConfirmationEmail(name, email, serviceRequired);
     }
-
-    setSubmitting(false);
-    setFormSubmitted(true);
-    setTimeout(() => setFormSubmitted(false), 6000);
-    e.target.reset();
   };
 
   // Admin Passcode Authentication
