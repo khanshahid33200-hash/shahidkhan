@@ -1,5 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap');
 @import "tailwindcss";
+
+/* Recoleta Font Import */
+@font-face {
+  font-family: 'Recoleta';
+  src: local('Recoleta'), local('Recoleta-Bold'), url('https://fonts.cdnfonts.com/s/73523/Recoleta-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Recoleta';
+  src: local('Recoleta SemiBold'), local('Recoleta-SemiBold'), url('https://fonts.cdnfonts.com/s/73523/Recoleta-SemiBold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
@@ -47,14 +64,20 @@
     transition: background-color 0.3s ease, color 0.3s ease;
     overflow-x: hidden;
   }
+
+  /* All Headings use Recoleta Font */
+  h1, h2, h3, h4, h5, h6, .font-heading, .font-display {
+    font-family: 'Recoleta', 'Fraunces', Georgia, serif !important;
+    letter-spacing: -0.02em;
+  }
 }
 
 .font-heading {
-  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-family: 'Recoleta', 'Fraunces', Georgia, serif !important;
 }
 
 .font-display {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Recoleta', 'Fraunces', Georgia, serif !important;
 }
 
 /* Glassmorphism Card Utilities */
