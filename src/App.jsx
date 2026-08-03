@@ -336,9 +336,11 @@ export default function App() {
           
           {/* Logo */}
           <a href="#" className="flex items-center gap-3 group">
-            <span className="w-10 h-10 rounded-xl bg-[var(--text-primary)] text-[var(--bg-primary)] font-display font-extrabold text-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
-              S
-            </span>
+            <img 
+              src="/LOGO.png" 
+              alt="Shahid Khan Logo" 
+              className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+            />
             <div className="flex flex-col">
               <span className="font-heading font-bold text-lg tracking-tight text-[var(--text-primary)]">Shahid Khan</span>
               <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-muted)]">Digital Marketer & AI Creator</span>
@@ -1260,9 +1262,11 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           
           <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-[var(--text-primary)] text-[var(--bg-primary)] font-display font-extrabold text-sm flex items-center justify-center">
-              S
-            </span>
+            <img 
+              src="/LOGO.png" 
+              alt="Shahid Khan Logo" 
+              className="h-8 w-auto object-contain" 
+            />
             <p className="text-xs font-semibold text-[var(--text-secondary)]">
               © {new Date().getFullYear()} Shahid Khan. Digital Marketer & AI Website Creator.
             </p>
