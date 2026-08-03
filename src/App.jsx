@@ -449,6 +449,7 @@ export default function App() {
 
   // Ticket Submission & Visitor Tracking States
   const [submittedTicketId, setSubmittedTicketId] = useState('');
+  const [successModalData, setSuccessModalData] = useState(null);
   const [trackingInput, setTrackingInput] = useState('');
   const [trackedResult, setTrackedResult] = useState(null);
   const [trackingSearched, setTrackingSearched] = useState(false);
@@ -635,6 +636,12 @@ export default function App() {
     setSubmitting(false);
     setFormSubmitted(true);
     setSubmittedTicketId(ticketId);
+    setSuccessModalData({
+      ticketId,
+      name,
+      email,
+      serviceRequired
+    });
     formElement.reset();
     setTimeout(() => setFormSubmitted(false), 10000);
 
@@ -2172,6 +2179,14 @@ export default function App() {
                           ></textarea>
                         </div>
 
+                        <button 
+                          type="submit" 
+                          disabled={submitting}
+                          className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                        >
+                          <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
+                        </button>
+
                       </form>
 
                     </div>
@@ -2914,6 +2929,88 @@ export default function App() {
         <span className="hidden group-hover:inline text-xs font-bold font-heading pr-1">Chat on WhatsApp</span>
       </a>
 
+
+      {/* SUCCESS CONFIRMATION MODAL POP-UP */}
+      <AnimatePresence>
+        {successModalData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.88, y: 20 }}
+              className="relative w-full max-w-lg p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl space-y-6 text-center"
+            >
+              <button 
+                onClick={() => setSuccessModalData(null)}
+                className="absolute top-4 right-4 p-2 rounded-full border border-[var(--border-color)] text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto shadow-lg">
+                <CheckCircle2 className="w-9 h-9" />
+              </div>
+
+              <div className="space-y-2">
+                <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  INQUIRY SUBMITTED SUCCESSFULLY
+                </span>
+                <h3 className="font-display text-2xl font-extrabold text-[var(--text-primary)]">
+                  Thank You, {successModalData.name}! 🎉
+                </h3>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                  Our growth strategy team will review your campaign goals for <strong>{successModalData.serviceRequired || 'Digital Marketing'}</strong> and reach out to you shortly via email or WhatsApp (+91 95878 67559).
+                </p>
+              </div>
+
+              {/* Ticket Box */}
+              <div className="p-4 rounded-2xl bg-[var(--bg-primary)] border border-emerald-500/30 space-y-2 text-center">
+                <p className="text-[11px] font-mono uppercase font-bold text-[var(--text-muted)]">Your Tracking Ticket Number</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="font-mono text-2xl font-black text-[var(--text-primary)] tracking-wider">
+                    #{successModalData.ticketId}
+                  </span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(successModalData.ticketId);
+                      alert(`Ticket #${successModalData.ticketId} copied to clipboard!`);
+                    }}
+                    className="p-1.5 rounded-lg border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                    title="Copy Ticket ID"
+                  >
+                    Copy 📋
+                  </button>
+                </div>
+                <p className="text-[11px] text-[var(--text-secondary)]">Save this Ticket Number to track live inquiry updates on our website anytime!</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button 
+                  onClick={() => {
+                    const tId = successModalData.ticketId;
+                    setSuccessModalData(null);
+                    setTrackingInput(tId);
+                    setTrackingSearched(true);
+                    const found = leadsList.find(l => l.ticketId === tId);
+                    setTrackedResult(found || null);
+                    navigateTo('contact', 'contact-section');
+                  }}
+                  className="flex-1 py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+                >
+                  Track My Ticket Now ↗
+                </button>
+                <button 
+                  onClick={() => setSuccessModalData(null)}
+                  className="px-5 py-3.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] font-heading text-xs font-bold uppercase tracking-wider hover:text-[var(--text-primary)] cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* FOOTER WITH CLEAN PATH LINKS */}
       <footer className="py-8 border-t border-[var(--border-color)] bg-[var(--bg-primary)]">
