@@ -146,6 +146,8 @@ const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceReq
     console.warn("Serverless email endpoint notice, using direct Resend API fallback:", err);
   }
 
+  if (!RESEND_API_KEY) return;
+
   // 2. Direct Resend API Fallback
   try {
     const response = await fetch('https://api.resend.com/emails', {
