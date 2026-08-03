@@ -503,6 +503,10 @@ export default function App() {
   }, 0);
 
   // Ticket Submission & Visitor Tracking States
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [demoModalType, setDemoModalType] = useState('Book a Demo'); // 'Book a Demo' | 'Get a Call Back'
+  const [demoSubmitting, setDemoSubmitting] = useState(false);
+
   const [activeLegalModal, setActiveLegalModal] = useState(null); // 'privacy' | 'refund' | 'terms'
   const [submittedTicketId, setSubmittedTicketId] = useState('');
   const [successModalData, setSuccessModalData] = useState(null);
@@ -647,7 +651,81 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // Ultra-Fast Instant Contact & Application Form Submission
+  // FORM 1: BOOK A DEMO / GET A CALL BACK SUBMISSION HANDLER
+  const handleDemoSubmit = (e) => {
+    e.preventDefault();
+    setDemoSubmitting(true);
+
+    const formElement = e.target;
+    const formData = new FormData(formElement);
+    const name = formData.get('demoName') || '';
+    const email = formData.get('demoEmail') || '';
+    const phone = formData.get('demoPhone') || '';
+    const note = formData.get('demoNote') || '';
+
+    const leadId = 'lead_demo_' + Date.now();
+    const prefix = demoModalType === 'Book a Demo' ? 'SK-DEMO-' : 'SK-CALL-';
+    const ticketId = prefix + Math.floor(10000 + Math.random() * 90000);
+    const dateFormatted = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
+
+    const localLead = {
+      id: leadId,
+      ticketId,
+      status: "Open",
+      name,
+      email,
+      phone,
+      businessName: demoModalType,
+      serviceRequired: `${demoModalType}: ${note || 'Live Strategy Consultation'}`,
+      budget: "Discuss on Call",
+      message: `${demoModalType} requested. Time/Note: ${note || 'None provided'}`,
+      formType: demoModalType,
+      type: demoModalType,
+      createdAt: dateFormatted,
+      dateFormatted,
+      replies: []
+    };
+
+    try {
+      const existingLeads = JSON.parse(localStorage.getItem('site_leads') || '[]');
+      const updatedLeads = [localLead, ...existingLeads];
+      localStorage.setItem('site_leads', JSON.stringify(updatedLeads));
+      setLeadsList(updatedLeads);
+    } catch (err) {
+      console.warn("LocalStorage lead save notice:", err);
+    }
+
+    setDemoSubmitting(false);
+    setDemoModalOpen(false);
+    setSubmittedTicketId(ticketId);
+    setSuccessModalData({
+      ticketId,
+      name,
+      email,
+      phone,
+      serviceRequired: localLead.serviceRequired,
+      formType: demoModalType
+    });
+    formElement.reset();
+
+    if (db) {
+      addDoc(collection(db, "contacts"), localLead)
+        .then(docRef => console.log("Demo request uploaded to Firestore! Doc ID:", docRef.id))
+        .catch(err => console.warn("Firestore demo upload notice:", err));
+    }
+
+    trackPixelEvent('Lead', {
+      content_name: demoModalType,
+      value: 1.00,
+      currency: 'USD'
+    });
+
+    if (email) {
+      sendResendConfirmationEmail(name, email, localLead.serviceRequired, ticketId, 'confirmation', 'Open', '');
+    }
+  };
+
+  // FORM 2: CONTACT & SUPPORT SUBMISSION HANDLER
   const handleContactSubmit = (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -663,7 +741,7 @@ export default function App() {
     const message = formData.get('message') || '';
 
     const leadId = 'lead_' + Date.now();
-    const ticketId = 'SK-' + Math.floor(10000 + Math.random() * 90000);
+    const ticketId = 'SK-SUPP-' + Math.floor(10000 + Math.random() * 90000);
     const dateFormatted = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
 
     const localLead = {
@@ -677,7 +755,8 @@ export default function App() {
       serviceRequired,
       budget,
       message,
-      type: "Digital Marketing Lead",
+      formType: "Contact & Support",
+      type: "Contact & Support",
       createdAt: dateFormatted,
       dateFormatted,
       replies: []
@@ -1243,21 +1322,28 @@ export default function App() {
                     </p>
 
                     {/* Primary CTAs */}
-                    <div className="flex flex-wrap items-center gap-4 pt-1">
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
                       <button 
-                        onClick={() => navigateTo('contact')}
-                        className="px-6 py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-md cursor-pointer"
+                        onClick={() => { setDemoModalType('Book a Demo'); setDemoModalOpen(true); }}
+                        className="px-5 py-3.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 shadow-lg cursor-pointer"
                       >
-                        <span>Get More Leads & Sales</span>
-                        <ArrowUpRight className="w-4 h-4" />
+                        <Calendar className="w-4 h-4 text-emerald-300" />
+                        <span>Book a Demo</span>
                       </button>
 
                       <button 
-                        onClick={() => navigateTo('home', 'home-portfolio')}
-                        className="px-6 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
+                        onClick={() => { setDemoModalType('Get a Call Back'); setDemoModalOpen(true); }}
+                        className="px-5 py-3.5 rounded-xl border border-emerald-600/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-emerald-500/20 transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
                       >
-                        <span>Explore Portfolio Work</span>
-                        <ArrowDown className="w-4 h-4" />
+                        <PhoneCall className="w-4 h-4" />
+                        <span>Get a Call Back</span>
+                      </button>
+
+                      <button 
+                        onClick={() => navigateTo('contact')}
+                        className="px-5 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
+                      >
+                        <span>Contact & Support ↗</span>
                       </button>
                     </div>
 
@@ -2828,9 +2914,18 @@ export default function App() {
                                     <p className="text-[10px] font-mono text-[var(--text-muted)]">{lead.email}</p>
                                   </td>
                                   <td className="py-3">
-                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-secondary)]">
-                                      {lead.serviceRequired ? lead.serviceRequired.split(' ')[0] : 'Marketing'}
-                                    </span>
+                                    <div className="space-y-0.5">
+                                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-mono font-extrabold uppercase border ${
+                                        lead.formType === 'Book a Demo' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                                        lead.formType === 'Get a Call Back' ? 'bg-blue-500/10 text-blue-600 border-blue-500/30' :
+                                        'bg-purple-500/10 text-purple-600 border-purple-500/30'
+                                      }`}>
+                                        {lead.formType || 'Contact & Support'}
+                                      </span>
+                                      <p className="text-[10px] text-[var(--text-secondary)] font-medium truncate max-w-[120px]">
+                                        {lead.serviceRequired ? lead.serviceRequired.split(':')[0] : 'General'}
+                                      </p>
+                                    </div>
                                   </td>
                                   <td className="py-3">
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border ${
@@ -3464,6 +3559,104 @@ export default function App() {
                 </button>
               </div>
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* FORM 1: BOOK A DEMO & GET A CALL BACK POPUP MODAL */}
+      <AnimatePresence>
+        {demoModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDemoModalOpen(false)}
+              className="fixed inset-0 bg-black/70 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="relative w-full max-w-lg rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 sm:p-8 shadow-2xl z-10 space-y-6 text-[var(--text-primary)]"
+            >
+              <button 
+                onClick={() => setDemoModalOpen(false)}
+                className="absolute top-5 right-5 p-2 rounded-full border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="space-y-2">
+                <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  {demoModalType === 'Book a Demo' ? '⚡ LIVE STRATEGY DEMO' : '📞 DIRECT PHONE CALLBACK'}
+                </span>
+                <h2 className="font-display text-2xl font-extrabold">
+                  {demoModalType === 'Book a Demo' ? 'Book a Live Campaign Demo' : 'Request an Immediate Call Back'}
+                </h2>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Fill your details below. Shahid Khan will contact you directly to discuss your ad strategy and campaign goals.
+                </p>
+              </div>
+
+              <form onSubmit={handleDemoSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Full Name *</label>
+                  <input 
+                    type="text" 
+                    name="demoName"
+                    required
+                    placeholder="Enter your full name..."
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
+                  <input 
+                    type="email" 
+                    name="demoEmail"
+                    required
+                    placeholder="name@company.com"
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Mobile Number / WhatsApp *</label>
+                  <input 
+                    type="tel" 
+                    name="demoPhone"
+                    required
+                    placeholder="+91 98765 43210"
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Preferred Time / Strategy Note (Optional)</label>
+                  <input 
+                    type="text" 
+                    name="demoNote"
+                    placeholder="e.g. Morning call / Meta Ads Audit request..."
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={demoSubmitting}
+                  className="w-full py-4 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
+                >
+                  {demoSubmitting ? (
+                    <span>Submitting Request...</span>
+                  ) : (
+                    <span>{demoModalType === 'Book a Demo' ? 'Confirm & Book Demo 🚀' : 'Request Call Back Now 📞'}</span>
+                  )}
+                </button>
+              </form>
             </motion.div>
           </div>
         )}
