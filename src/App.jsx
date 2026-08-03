@@ -572,7 +572,7 @@ export default function App() {
           </div>
 
           {/* Hero Right Column (3D TILT & SMOOTH DOWNWARD TRAVEL PROFILE PHOTO) */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end perspective-1000">
+          <div className="lg:col-span-5 flex justify-center lg:justify-end perspective-1000 lg:-mt-12">
             <motion.div 
               style={{ 
                 scale: photoScale, 
@@ -581,7 +581,7 @@ export default function App() {
                 rotateZ: photoRotateZ
               }}
               transition={{ type: "spring", stiffness: 200, damping: 22 }}
-              className="w-full max-w-sm lg:max-w-md z-20"
+              className="w-full max-w-[320px] sm:max-w-[350px] lg:max-w-[360px] z-20"
             >
               <HeroPhoto3D className="w-full">
                 <div className="rounded-3xl overflow-hidden shadow-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2">
