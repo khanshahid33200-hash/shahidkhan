@@ -33,9 +33,9 @@
     --btn-text: #ffffff;
     --header-bg: rgba(246, 246, 244, 0.90);
     --photo-filter: grayscale(100%) contrast(105%);
-    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(226, 226, 222, 0.8);
+    --card-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(226, 226, 222, 0.85);
   }
 
   [data-theme="dark"] {
@@ -52,9 +52,9 @@
     --btn-text: #000000;
     --header-bg: rgba(10, 10, 10, 0.90);
     --photo-filter: grayscale(100%) contrast(110%) brightness(95%);
-    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-    --glass-bg: rgba(20, 20, 20, 0.7);
-    --glass-border: rgba(38, 38, 38, 0.8);
+    --card-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.05);
+    --glass-bg: rgba(20, 20, 20, 0.75);
+    --glass-border: rgba(38, 38, 38, 0.85);
   }
 
   body {
@@ -80,12 +80,33 @@
   font-family: 'Recoleta', 'Fraunces', Georgia, serif !important;
 }
 
-/* Glassmorphism Card Utilities */
+/* Glassmorphism & 3D Utility Classes */
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-3d {
+  transform-style: preserve-3d;
+}
+
+.translate-z-10 {
+  transform: translateZ(10px);
+}
+
+.translate-z-20 {
+  transform: translateZ(20px);
+}
+
+.translate-z-30 {
+  transform: translateZ(30px);
 }
 
 /* Custom Scrollbar */

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import heroPhoto from './assets/hero.png';
 import { db } from './firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -31,6 +31,58 @@ import {
   Users,
   Check
 } from 'lucide-react';
+
+// Reusable 3D Tilt Card Component
+const Card3D = ({ children, className = "", depth = 20 }) => {
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // Calculate rotation (-12deg to 12deg max tilt)
+    const rotateXVal = ((y - centerY) / centerY) * -12;
+    const rotateYVal = ((x - centerX) / centerX) * 12;
+
+    setRotateX(rotateXVal);
+    setRotateY(rotateYVal);
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setRotateX(0);
+    setRotateY(0);
+    setIsHovered(false);
+  };
+
+  return (
+    <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      animate={{
+        rotateX,
+        rotateY,
+        scale: isHovered ? 1.03 : 1,
+        z: isHovered ? depth : 0
+      }}
+      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+      style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
+      className={`relative transform-3d ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 // Animated Counter Component using Framer Motion
 const AnimatedCounter = ({ target, suffix = "" }) => {
@@ -70,6 +122,14 @@ export default function App() {
   // Custom Cursor state
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [cursorHovered, setCursorHovered] = useState(false);
+
+  // Scroll driven animation hooks for Profile Photo (-Y travel & scale reduction)
+  const { scrollY } = useScroll();
+  const photoScale = useTransform(scrollY, [0, 500], [1, 0.58]);
+  const photoY = useTransform(scrollY, [0, 500], [0, -150]);
+  const photoRotateY = useTransform(scrollY, [0, 500], [0, 15]);
+  const photoRotateZ = useTransform(scrollY, [0, 500], [0, -4]);
+  const photoOpacity = useTransform(scrollY, [0, 600, 800], [1, 0.9, 0.75]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -422,7 +482,7 @@ export default function App() {
       </header>
 
 
-      {/* HERO SECTION (DIGITAL MARKETING FOCUS) */}
+      {/* HERO SECTION (DIGITAL MARKETING FOCUS WITH SCROLL 3D PHOTO ANIMATION) */}
       <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 max-w-7xl mx-auto px-6">
         
         {/* Availability Badge */}
@@ -506,38 +566,47 @@ export default function App() {
 
           </div>
 
-          {/* Hero Right Column (Portrait Photo Card) */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="lg:col-span-5 flex justify-center lg:justify-end"
-          >
-            <div className="relative w-full max-w-md lg:max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-[var(--border-color)] bg-[var(--bg-card)] group p-2">
-              <div className="rounded-2xl overflow-hidden relative">
-                <img 
-                  src="/shahid_photo.png" 
-                  onError={(e) => { e.currentTarget.src = heroPhoto; }}
-                  alt="Shahid Khan — Digital Marketing Specialist" 
-                  className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-500 transform group-hover:scale-102"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
-                <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl backdrop-blur-md bg-black/60 border border-white/10 text-white flex items-center justify-between">
-                  <div>
-                    <p className="font-heading font-bold text-sm">Shahid Khan</p>
-                    <p className="text-xs text-neutral-300">Digital Marketer & Growth Strategist</p>
+          {/* Hero Right Column (3D Interactive & Scroll-Driven Traveling Profile Photo) */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end perspective-1000">
+            <motion.div 
+              style={{ 
+                scale: photoScale, 
+                y: photoY, 
+                rotateY: photoRotateY, 
+                rotateZ: photoRotateZ,
+                opacity: photoOpacity
+              }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="w-full max-w-md lg:max-w-lg"
+            >
+              <Card3D depth={35} className="w-full">
+                <div className="rounded-3xl overflow-hidden shadow-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2">
+                  <div className="rounded-2xl overflow-hidden relative">
+                    <img 
+                      src="/shahid_photo.png" 
+                      onError={(e) => { e.currentTarget.src = heroPhoto; }}
+                      alt="Shahid Khan — Digital Marketing Specialist" 
+                      className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-500 transform group-hover:scale-102"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
+                    <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl backdrop-blur-md bg-black/60 border border-white/10 text-white flex items-center justify-between translate-z-30">
+                      <div>
+                        <p className="font-heading font-bold text-sm">Shahid Khan</p>
+                        <p className="text-xs text-neutral-300">Digital Marketer & Growth Strategist</p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-md bg-white/20 text-[10px] font-mono uppercase font-bold tracking-wider">
+                        META & GOOGLE ADS
+                      </span>
+                    </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-md bg-white/20 text-[10px] font-mono uppercase font-bold tracking-wider">
-                    META & GOOGLE ADS
-                  </span>
                 </div>
-              </div>
-            </div>
-          </motion.div>
+              </Card3D>
+            </motion.div>
+          </div>
 
         </div>
 
-        {/* ANIMATED MARKETING STATISTICS SECTION */}
+        {/* ANIMATED 3D MARKETING STATISTICS SECTION */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -545,33 +614,21 @@ export default function App() {
           transition={{ duration: 0.6 }}
           className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
         >
-          <div className="p-6 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all">
-            <h3 className="font-display font-extrabold text-3xl sm:text-4xl text-[var(--text-primary)]">
-              <AnimatedCounter target={1000} suffix="+" />
-            </h3>
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">Leads Generated</p>
-          </div>
-
-          <div className="p-6 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all">
-            <h3 className="font-display font-extrabold text-3xl sm:text-4xl text-[var(--text-primary)]">
-              <AnimatedCounter target={100} suffix="+" />
-            </h3>
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">Campaigns Managed</p>
-          </div>
-
-          <div className="p-6 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all">
-            <h3 className="font-display font-extrabold text-3xl sm:text-4xl text-[var(--text-primary)]">
-              <AnimatedCounter target={5} suffix="+" />
-            </h3>
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">Brands Scaled</p>
-          </div>
-
-          <div className="p-6 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all">
-            <h3 className="font-display font-extrabold text-3xl sm:text-4xl text-[var(--text-primary)]">
-              <AnimatedCounter target={20} suffix="+" />
-            </h3>
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)]">High ROAS Funnels</p>
-          </div>
+          {[
+            { label: "Leads Generated", target: 1000, suffix: "+" },
+            { label: "Campaigns Managed", target: 100, suffix: "+" },
+            { label: "Brands Scaled", target: 5, suffix: "+" },
+            { label: "High ROAS Funnels", target: 20, suffix: "+" }
+          ].map((stat, idx) => (
+            <Card3D key={idx} depth={20} className="w-full">
+              <div className="p-6 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all">
+                <h3 className="font-display font-extrabold text-3xl sm:text-4xl text-[var(--text-primary)] translate-z-20">
+                  <AnimatedCounter target={stat.target} suffix={stat.suffix} />
+                </h3>
+                <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--text-muted)] translate-z-10">{stat.label}</p>
+              </div>
+            </Card3D>
+          ))}
         </motion.div>
 
       </section>
@@ -614,32 +671,38 @@ export default function App() {
               </div>
             </div>
 
-            {/* Highlights Grid */}
+            {/* 3D Highlights Cards */}
             <div className="lg:col-span-5 grid grid-cols-1 gap-4">
               
-              <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all">
-                <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3">
-                  <Target className="w-5 h-5" />
+              <Card3D depth={25}>
+                <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3 translate-z-20">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] translate-z-10">Meta & Google Paid Advertising</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">Strategic audience targeting, creative ad design, A/B testing, and budget scaling focused on maximum Return on Ad Spend (ROAS).</p>
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Meta & Google Paid Advertising</h3>
-                <p className="text-xs text-[var(--text-secondary)]">Strategic audience targeting, creative ad design, A/B testing, and budget scaling focused on maximum Return on Ad Spend (ROAS).</p>
-              </div>
+              </Card3D>
 
-              <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all">
-                <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3">
-                  <TrendingUp className="w-5 h-5" />
+              <Card3D depth={25}>
+                <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3 translate-z-20">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] translate-z-10">Lead Generation & Sales Funnels</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">Engineered landing pages and lead capture systems built to convert cold paid traffic into pre-qualified sales calls and inquiries.</p>
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Lead Generation & Sales Funnels</h3>
-                <p className="text-xs text-[var(--text-secondary)]">Engineered landing pages and lead capture systems built to convert cold paid traffic into pre-qualified sales calls and inquiries.</p>
-              </div>
+              </Card3D>
 
-              <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all">
-                <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3">
-                  <BarChart3 className="w-5 h-5" />
+              <Card3D depth={25}>
+                <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 hover:border-[var(--text-primary)] transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-3 translate-z-20">
+                    <BarChart3 className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] translate-z-10">Meta Pixel & Analytics Setup</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">Complete conversion tracking via Meta Pixel, CAPI, and GA4 to ensure every dollar of ad spend is measured and optimized.</p>
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Meta Pixel & Analytics Setup</h3>
-                <p className="text-xs text-[var(--text-secondary)]">Complete conversion tracking via Meta Pixel, CAPI, and GA4 to ensure every dollar of ad spend is measured and optimized.</p>
-              </div>
+              </Card3D>
 
             </div>
 
@@ -649,7 +712,7 @@ export default function App() {
       </section>
 
 
-      {/* SKILLS SECTION (DIGITAL MARKETING FIRST) */}
+      {/* SKILLS SECTION (3D CARDS) */}
       <section id="skills" className="py-20 border-t border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-6">
           
@@ -661,33 +724,28 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {skillsCategories.map((cat, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="p-8 rounded-3xl glass-card border border-[var(--border-color)] hover:border-[var(--text-primary)] transition-all shadow-sm"
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    {cat.icon}
+              <Card3D key={idx} depth={20} className="w-full">
+                <div className="p-8 rounded-3xl glass-card border border-[var(--border-color)] hover:border-[var(--text-primary)] transition-all shadow-sm">
+                  <div className="flex items-center gap-3 mb-6 translate-z-20">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                      {cat.icon}
+                    </div>
+                    <h3 className="font-heading font-bold text-xl text-[var(--text-primary)]">{cat.title}</h3>
                   </div>
-                  <h3 className="font-heading font-bold text-xl text-[var(--text-primary)]">{cat.title}</h3>
-                </div>
 
-                <div className="flex flex-wrap gap-2.5">
-                  {cat.skills.map((skill, sIdx) => (
-                    <span 
-                      key={sIdx}
-                      className="px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--text-primary)] transition-colors flex items-center gap-1.5"
-                    >
-                      <Check className="w-3 h-3 text-emerald-500" />
-                      <span>{skill}</span>
-                    </span>
-                  ))}
+                  <div className="flex flex-wrap gap-2.5 translate-z-10">
+                    {cat.skills.map((skill, sIdx) => (
+                      <span 
+                        key={sIdx}
+                        className="px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--text-primary)] transition-colors flex items-center gap-1.5"
+                      >
+                        <Check className="w-3 h-3 text-emerald-500" />
+                        <span>{skill}</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
 
@@ -695,7 +753,7 @@ export default function App() {
       </section>
 
 
-      {/* ANIMATED TOOLS SECTION (MARKETING TECH STACK) */}
+      {/* ANIMATED 3D TOOLS SECTION */}
       <section className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
@@ -707,23 +765,21 @@ export default function App() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {toolsList.map((tool, idx) => (
-              <motion.div 
-                key={idx}
-                whileHover={{ y: -6, scale: 1.02 }}
-                className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all cursor-pointer group shadow-sm flex flex-col justify-between"
-              >
-                <div>
-                  <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-[var(--text-muted)] block mb-1">
-                    {tool.category}
-                  </span>
-                  <h4 className="font-heading font-bold text-base text-[var(--text-primary)] group-hover:underline">
-                    {tool.name}
-                  </h4>
+              <Card3D key={idx} depth={30} className="w-full">
+                <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all cursor-pointer group shadow-sm flex flex-col justify-between h-full">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-[var(--text-muted)] block mb-1 translate-z-10">
+                      {tool.category}
+                    </span>
+                    <h4 className="font-heading font-bold text-base text-[var(--text-primary)] group-hover:underline translate-z-20">
+                      {tool.name}
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-3 leading-tight translate-z-10">
+                    {tool.desc}
+                  </p>
                 </div>
-                <p className="text-[11px] text-[var(--text-secondary)] mt-3 leading-tight">
-                  {tool.desc}
-                </p>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
 
@@ -731,7 +787,7 @@ export default function App() {
       </section>
 
 
-      {/* FEATURED CAMPAIGNS & PROJECTS SECTION */}
+      {/* FEATURED CAMPAIGNS & PROJECTS SECTION (3D CARDS) */}
       <section id="projects" className="py-20 border-t border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-6">
           
@@ -770,54 +826,57 @@ export default function App() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.4 }}
-                  className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 flex flex-col justify-between hover:border-[var(--text-primary)] transition-all duration-300 group shadow-sm"
                 >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-4">
-                      <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
-                        {project.location}
-                      </span>
-                      {project.website && (
-                        <span className="text-xs font-mono text-[var(--text-muted)] flex items-center gap-1">
-                          <Globe className="w-3 h-3" /> {project.website}
-                        </span>
-                      )}
-                    </div>
+                  <Card3D depth={25} className="h-full">
+                    <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 flex flex-col justify-between h-full hover:border-[var(--text-primary)] transition-all duration-300 group shadow-sm">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-4 translate-z-10">
+                          <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
+                            {project.location}
+                          </span>
+                          {project.website && (
+                            <span className="text-xs font-mono text-[var(--text-muted)] flex items-center gap-1">
+                              <Globe className="w-3 h-3" /> {project.website}
+                            </span>
+                          )}
+                        </div>
 
-                    <h3 className="font-heading font-bold text-xl text-[var(--text-primary)] mb-2 group-hover:underline">
-                      {project.title}
-                    </h3>
+                        <h3 className="font-heading font-bold text-xl text-[var(--text-primary)] mb-2 group-hover:underline translate-z-20">
+                          {project.title}
+                        </h3>
 
-                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-6">
-                      {project.description}
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex flex-wrap gap-1.5 mb-6 pt-4 border-t border-[var(--border-color)]">
-                      {project.services.map((srv, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-md bg-[var(--bg-primary)] text-[10px] font-medium text-[var(--text-secondary)]">
-                          {srv}
-                        </span>
-                      ))}
-                    </div>
-
-                    {project.link ? (
-                      <a 
-                        href={project.link} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="w-full py-3 rounded-xl border border-[var(--border-dark)] bg-transparent text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider"
-                      >
-                        <span>View Live Platform</span>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                      </a>
-                    ) : (
-                      <div className="w-full py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-semibold text-[var(--text-muted)] text-center">
-                        Active Lead Campaign
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-6 translate-z-10">
+                          {project.description}
+                        </p>
                       </div>
-                    )}
-                  </div>
+
+                      <div>
+                        <div className="flex flex-wrap gap-1.5 mb-6 pt-4 border-t border-[var(--border-color)] translate-z-10">
+                          {project.services.map((srv, idx) => (
+                            <span key={idx} className="px-2.5 py-1 rounded-md bg-[var(--bg-primary)] text-[10px] font-medium text-[var(--text-secondary)]">
+                              {srv}
+                            </span>
+                          ))}
+                        </div>
+
+                        {project.link ? (
+                          <a 
+                            href={project.link} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="w-full py-3 rounded-xl border border-[var(--border-dark)] bg-transparent text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider translate-z-20"
+                          >
+                            <span>View Live Platform</span>
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          </a>
+                        ) : (
+                          <div className="w-full py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-semibold text-[var(--text-muted)] text-center translate-z-10">
+                            Active Lead Campaign
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card3D>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -827,7 +886,7 @@ export default function App() {
       </section>
 
 
-      {/* WHAT I CAN DO FOR YOU (14 DIGITAL MARKETING SERVICES GRID) */}
+      {/* WHAT I CAN DO FOR YOU (14 3D SERVICES CARDS) */}
       <section id="services" className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
@@ -839,23 +898,21 @@ export default function App() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {servicesList.map((srv, idx) => (
-              <motion.div 
-                key={idx}
-                whileHover={{ y: -4 }}
-                className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-sm flex flex-col justify-between"
-              >
-                <div>
-                  <div className="w-8 h-8 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center font-heading font-bold text-xs mb-4">
-                    {(idx + 1).toString().padStart(2, '0')}
+              <Card3D key={idx} depth={20} className="w-full">
+                <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-sm flex flex-col justify-between h-full">
+                  <div>
+                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center font-heading font-bold text-xs mb-4 translate-z-20">
+                      {(idx + 1).toString().padStart(2, '0')}
+                    </div>
+                    <h3 className="font-heading font-bold text-base text-[var(--text-primary)] mb-2 translate-z-10">
+                      {srv.name}
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed translate-z-10">
+                      {srv.desc}
+                    </p>
                   </div>
-                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] mb-2">
-                    {srv.name}
-                  </h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    {srv.desc}
-                  </p>
                 </div>
-              </motion.div>
+              </Card3D>
             ))}
           </div>
 
@@ -867,50 +924,52 @@ export default function App() {
       <section className="py-20 border-t border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-6">
           
-          <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-8 sm:p-12 shadow-xl">
-            <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-              <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Impact</span>
-              <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Measurable Marketing Outcomes</h2>
+          <Card3D depth={30} className="w-full">
+            <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-8 sm:p-12 shadow-xl">
+              <div className="text-center max-w-2xl mx-auto mb-12 space-y-2 translate-z-20">
+                <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Impact</span>
+                <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Measurable Marketing Outcomes</h2>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 text-center translate-z-10">
+                <div className="p-4 border-r border-[var(--border-color)] last:border-0">
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">1000+</p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Leads Generated</p>
+                </div>
+
+                <div className="p-4 border-r border-[var(--border-color)] last:border-0">
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">100+</p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Paid Campaigns</p>
+                </div>
+
+                <div className="p-4 border-r border-[var(--border-color)] last:border-0">
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">5+</p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Brands Scaled</p>
+                </div>
+
+                <div className="p-4 border-r border-[var(--border-color)] last:border-0">
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">20+</p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Funnels & Sites</p>
+                </div>
+
+                <div className="p-4 border-r border-[var(--border-color)] last:border-0">
+                  <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">High</p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">ROAS Focus</p>
+                </div>
+
+                <div className="p-4">
+                  <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">100%</p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Growth Support</p>
+                </div>
+              </div>
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 text-center">
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">1000+</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Leads Generated</p>
-              </div>
-
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">100+</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Paid Campaigns</p>
-              </div>
-
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">5+</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Brands Scaled</p>
-              </div>
-
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">20+</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Funnels & Sites</p>
-              </div>
-
-              <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">High</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">ROAS Focus</p>
-              </div>
-
-              <div className="p-4">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">100%</p>
-                <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Growth Support</p>
-              </div>
-            </div>
-          </div>
+          </Card3D>
 
         </div>
       </section>
 
 
-      {/* WHY CHOOSE ME (DIGITAL MARKETING ADVANTAGE) */}
+      {/* WHY CHOOSE ME (3D ADVANTAGE CARDS) */}
       <section className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
@@ -930,16 +989,15 @@ export default function App() {
               { title: "Affordable & Flexible Models", desc: "Custom campaign packages structured for local businesses, agencies, and non-profits." },
               { title: "AI-Powered Strategy", desc: "Using AI tools (ChatGPT, Claude) for audience research, creative copywriting, and rapid optimization." }
             ].map((item, idx) => (
-              <div 
-                key={idx}
-                className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all space-y-2"
-              >
-                <div className="w-8 h-8 rounded-lg bg-[var(--text-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold text-xs">
-                  ✓
+              <Card3D key={idx} depth={20} className="w-full">
+                <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all space-y-2 h-full">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--text-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold text-xs translate-z-20">
+                    ✓
+                  </div>
+                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] translate-z-10">{item.title}</h3>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed translate-z-10">{item.desc}</p>
                 </div>
-                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{item.title}</h3>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
-              </div>
+              </Card3D>
             ))}
           </div>
 
@@ -959,24 +1017,19 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {processSteps.map((p, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] relative hover:border-[var(--text-primary)] transition-all shadow-sm"
-              >
-                <span className="font-display font-extrabold text-5xl text-[var(--border-color)] block mb-4">
-                  {p.step}
-                </span>
-                <h3 className="font-heading font-bold text-xl text-[var(--text-primary)] mb-2">
-                  {p.title}
-                </h3>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                  {p.desc}
-                </p>
-              </motion.div>
+              <Card3D key={idx} depth={25} className="w-full">
+                <div className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] relative hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
+                  <span className="font-display font-extrabold text-5xl text-[var(--border-color)] block mb-4 translate-z-20">
+                    {p.step}
+                  </span>
+                  <h3 className="font-heading font-bold text-xl text-[var(--text-primary)] mb-2 translate-z-10">
+                    {p.title}
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed translate-z-10">
+                    {p.desc}
+                  </p>
+                </div>
+              </Card3D>
             ))}
           </div>
 
@@ -984,7 +1037,7 @@ export default function App() {
       </section>
 
 
-      {/* TESTIMONIALS SECTION */}
+      {/* TESTIMONIALS SECTION (3D CARDS) */}
       <section className="py-20 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
         <div className="max-w-7xl mx-auto px-6">
           
@@ -995,24 +1048,23 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((t, idx) => (
-              <div 
-                key={idx}
-                className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col justify-between hover:border-[var(--text-primary)] transition-all shadow-sm"
-              >
-                <div className="space-y-4">
-                  <div className="flex text-amber-500 gap-1 text-sm">
-                    {"★★★★★"}
+              <Card3D key={idx} depth={25} className="w-full">
+                <div className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col justify-between hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
+                  <div className="space-y-4 translate-z-10">
+                    <div className="flex text-amber-500 gap-1 text-sm">
+                      {"★★★★★"}
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)] italic leading-relaxed">
+                      "{t.quote}"
+                    </p>
                   </div>
-                  <p className="text-sm text-[var(--text-secondary)] italic leading-relaxed">
-                    "{t.quote}"
-                  </p>
-                </div>
 
-                <div className="pt-6 border-t border-[var(--border-color)] mt-6">
-                  <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">{t.author}</h4>
-                  <p className="text-xs text-[var(--text-muted)]">{t.role}</p>
+                  <div className="pt-6 border-t border-[var(--border-color)] mt-6 translate-z-10">
+                    <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">{t.author}</h4>
+                    <p className="text-xs text-[var(--text-muted)]">{t.role}</p>
+                  </div>
                 </div>
-              </div>
+              </Card3D>
             ))}
           </div>
 
@@ -1120,124 +1172,126 @@ export default function App() {
 
             {/* Comprehensive Contact Form Right */}
             <div className="lg:col-span-7">
-              <div className="p-8 sm:p-10 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
-                
-                <h3 className="font-heading font-bold text-2xl text-[var(--text-primary)] mb-6">Book a Strategy Session</h3>
-
-                <form onSubmit={handleContactSubmit} className="space-y-4">
+              <Card3D depth={20} className="w-full">
+                <div className="p-8 sm:p-10 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
                   
-                  {formSubmitted && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
+                  <h3 className="font-heading font-bold text-2xl text-[var(--text-primary)] mb-6 translate-z-20">Book a Strategy Session</h3>
+
+                  <form onSubmit={handleContactSubmit} className="space-y-4 translate-z-10">
+                    
+                    {formSubmitted && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
+                      >
+                        <CheckCircle2 className="w-5 h-5 shrink-0" />
+                        <span>Thank you! Your marketing inquiry has been saved to Firebase. I will get back to you shortly.</span>
+                      </motion.div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Name *</label>
+                        <input 
+                          type="text" 
+                          name="name" 
+                          required 
+                          placeholder="Shahid Khan" 
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
+                        <input 
+                          type="email" 
+                          name="email" 
+                          required 
+                          placeholder="you@example.com" 
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Phone / WhatsApp *</label>
+                        <input 
+                          type="tel" 
+                          name="phone" 
+                          required
+                          placeholder="+91 98765 43210" 
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Business Name</label>
+                        <input 
+                          type="text" 
+                          name="businessName" 
+                          placeholder="Company or Brand Name" 
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Marketing Service *</label>
+                        <select 
+                          name="serviceRequired"
+                          required
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        >
+                          <option value="">Select Primary Goal...</option>
+                          <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
+                          <option value="Google Ads (Search & PMax)">Google Ads (Search & PMax)</option>
+                          <option value="Lead Generation & Sales Funnels">Lead Generation & Sales Funnels</option>
+                          <option value="High-Converting Landing Page">High-Converting Landing Page</option>
+                          <option value="Meta Pixel & GA4 Setup">Meta Pixel & GA4 Setup</option>
+                          <option value="NGO Campaign & Payment Portal">NGO Campaign & Payment Portal</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget</label>
+                        <select 
+                          name="budget"
+                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                        >
+                          <option value="Flexible">Flexible / Discuss Strategy</option>
+                          <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
+                          <option value="₹30,000 - ₹75,000">₹30,000 - ₹75,000 / month</option>
+                          <option value="₹75,000+">₹75,000+ / month</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Project Details *</label>
+                      <textarea 
+                        rows={4} 
+                        name="message" 
+                        required 
+                        placeholder="Tell me about your product, current ad campaigns, or lead generation goals..." 
+                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                      ></textarea>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      disabled={submitting}
+                      className="w-full py-4 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-lg"
                     >
-                      <CheckCircle2 className="w-5 h-5 shrink-0" />
-                      <span>Thank you! Your marketing inquiry has been saved to Firebase. I will get back to you shortly.</span>
-                    </motion.div>
-                  )}
+                      <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
+                    </button>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Name *</label>
-                      <input 
-                        type="text" 
-                        name="name" 
-                        required 
-                        placeholder="Shahid Khan" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
+                  </form>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
-                      <input 
-                        type="email" 
-                        name="email" 
-                        required 
-                        placeholder="you@example.com" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Phone / WhatsApp *</label>
-                      <input 
-                        type="tel" 
-                        name="phone" 
-                        required
-                        placeholder="+91 98765 43210" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Business Name</label>
-                      <input 
-                        type="text" 
-                        name="businessName" 
-                        placeholder="Company or Brand Name" 
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Marketing Service *</label>
-                      <select 
-                        name="serviceRequired"
-                        required
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      >
-                        <option value="">Select Primary Goal...</option>
-                        <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
-                        <option value="Google Ads (Search & PMax)">Google Ads (Search & PMax)</option>
-                        <option value="Lead Generation & Sales Funnels">Lead Generation & Sales Funnels</option>
-                        <option value="High-Converting Landing Page">High-Converting Landing Page</option>
-                        <option value="Meta Pixel & GA4 Setup">Meta Pixel & GA4 Setup</option>
-                        <option value="NGO Campaign & Payment Portal">NGO Campaign & Payment Portal</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget</label>
-                      <select 
-                        name="budget"
-                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      >
-                        <option value="Flexible">Flexible / Discuss Strategy</option>
-                        <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
-                        <option value="₹30,000 - ₹75,000">₹30,000 - ₹75,000 / month</option>
-                        <option value="₹75,000+">₹75,000+ / month</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Project Details *</label>
-                    <textarea 
-                      rows={4} 
-                      name="message" 
-                      required 
-                      placeholder="Tell me about your product, current ad campaigns, or lead generation goals..." 
-                      className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                    ></textarea>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    disabled={submitting}
-                    className="w-full py-4 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
-                  </button>
-
-                </form>
-
-              </div>
+                </div>
+              </Card3D>
             </div>
 
           </div>
