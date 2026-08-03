@@ -402,11 +402,12 @@ export default function App() {
     return localStorage.getItem('portfolio_theme') || 'light';
   });
 
-  // Clean Path Routing State (Valid paths: home, about, services, projects, contact, admin)
+  // Clean Path Routing State (Valid paths: home, about, services, projects, contact, mrshahidbabu)
   const [activePage, setActivePage] = useState(() => {
     const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
     if (path === 'portfolio') return 'projects';
-    return ['about', 'services', 'projects', 'contact', 'admin'].includes(path) ? path : 'home';
+    if (path === 'admin') return 'mrshahidbabu';
+    return ['about', 'services', 'projects', 'contact', 'mrshahidbabu'].includes(path) ? path : 'home';
   });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -587,7 +588,10 @@ export default function App() {
       const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
       if (path === 'portfolio') {
         setActivePage('projects');
-      } else if (['about', 'services', 'projects', 'contact', 'admin'].includes(path)) {
+      } else if (path === 'admin') {
+        setActivePage('mrshahidbabu');
+        window.history.replaceState({}, '', '/mrshahidbabu');
+      } else if (['about', 'services', 'projects', 'contact', 'mrshahidbabu'].includes(path)) {
         setActivePage(path);
       } else {
         setActivePage('home');
@@ -599,9 +603,10 @@ export default function App() {
   }, []);
 
   const navigateTo = (page, sectionId = null) => {
-    setActivePage(page);
-    let targetPath = page === 'home' ? '/' : `/${page}`;
-    if (page === 'projects') targetPath = '/portfolio';
+    const targetPage = page === 'admin' ? 'mrshahidbabu' : page;
+    setActivePage(targetPage);
+    let targetPath = targetPage === 'home' ? '/' : `/${targetPage}`;
+    if (targetPage === 'projects') targetPath = '/portfolio';
     
     window.history.pushState({}, '', targetPath);
     setMobileMenuOpen(false);
@@ -2405,10 +2410,10 @@ export default function App() {
           )}
 
 
-          {/* ==================== 6. SECRET ADMIN DASHBOARD (/admin) ==================== */}
-          {activePage === 'admin' && (
+          {/* ==================== 6. SECRET ADMIN DASHBOARD (/mrshahidbabu) ==================== */}
+          {(activePage === 'mrshahidbabu' || activePage === 'admin') && (
             <motion.div
-              key="admin"
+              key="mrshahidbabu"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
