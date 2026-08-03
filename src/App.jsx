@@ -481,6 +481,26 @@ export default function App() {
     }
   }, []);
 
+  // REAL-TIME FIRESTORE DATA CALCULATIONS FOR ADMIN PANEL
+  const totalInquiriesCount = leadsList.length;
+  const openTicketsCount = leadsList.filter(l => l.status === 'Open' || !l.status).length;
+  const inProgressCount = leadsList.filter(l => l.status === 'In Progress' || l.status === 'Replied').length;
+  const closedTicketsCount = leadsList.filter(l => l.status === 'Closed').length;
+
+  const metaAdsCount = leadsList.filter(l => (l.serviceRequired || '').toLowerCase().includes('meta')).length;
+  const googleAdsCount = leadsList.filter(l => (l.serviceRequired || '').toLowerCase().includes('google')).length;
+  const leadGenCount = leadsList.filter(l => (l.serviceRequired || '').toLowerCase().includes('lead')).length;
+  const webDesignCount = leadsList.filter(l => (l.serviceRequired || '').toLowerCase().includes('landing') || (l.serviceRequired || '').toLowerCase().includes('website')).length;
+  const otherCategoryCount = Math.max(0, totalInquiriesCount - (metaAdsCount + googleAdsCount + leadGenCount + webDesignCount));
+
+  const realTotalManagedBudget = leadsList.reduce((acc, lead) => {
+    const bStr = lead.budget || '';
+    if (bStr.includes('75,000+')) return acc + 75000;
+    if (bStr.includes('30,000')) return acc + 45000;
+    if (bStr.includes('15,000')) return acc + 20000;
+    return acc + 15000;
+  }, 0);
+
   // Ticket Submission & Visitor Tracking States
   const [activeLegalModal, setActiveLegalModal] = useState(null); // 'privacy' | 'refund' | 'terms'
   const [submittedTicketId, setSubmittedTicketId] = useState('');
@@ -2563,19 +2583,19 @@ export default function App() {
                     <div className="lg:col-span-7 p-6 sm:p-7 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-6 flex flex-col justify-between">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-mono uppercase font-bold text-[var(--text-muted)]">Main Strategy Account</span>
-                        <span className="text-xs font-mono uppercase font-bold text-emerald-600 dark:text-emerald-400">Available Inquiries: {leadsList.length}</span>
+                        <span className="text-xs font-mono uppercase font-bold text-emerald-600 dark:text-emerald-400">● Live Firestore Database ({leadsList.length} Inquiries)</span>
                       </div>
 
                       <div>
-                        <h1 className="font-display font-black text-2xl text-[var(--text-primary)] tracking-tight">ShahidKhan Savings & Growth Account</h1>
-                        <p className="text-xs font-mono text-[var(--text-muted)] mt-1">88 1240 7793 7644 3667 0002 9448 ↗</p>
+                        <h1 className="font-display font-black text-2xl text-[var(--text-primary)] tracking-tight">ShahidKhan Client Growth Pipeline</h1>
+                        <p className="text-xs font-mono text-[var(--text-muted)] mt-1">Firestore DB Sync Active ↗</p>
                       </div>
 
                       <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-[var(--border-color)] pt-4">
                         <div>
-                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Estimated Ad Value Managed</span>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Total Client Ad Budget Pipeline</span>
                           <p className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                            68.789,56 $
+                            {realTotalManagedBudget > 0 ? `₹${realTotalManagedBudget.toLocaleString('en-IN')}` : '₹0'}
                           </p>
                         </div>
 
@@ -2588,9 +2608,10 @@ export default function App() {
                           </button>
                           <button 
                             onClick={fetchLeads}
-                            className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer"
+                            className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-1.5"
                           >
-                            Sync Database
+                            <RefreshCw className={`w-3.5 h-3.5 ${loadingLeads ? 'animate-spin' : ''}`} />
+                            <span>Sync Firestore</span>
                           </button>
                         </div>
                       </div>
@@ -2607,9 +2628,9 @@ export default function App() {
                           </span>
                           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                         </div>
-                        <h3 className="font-display font-extrabold text-xl text-white">Define Standing Alerts & Reply Emails</h3>
+                        <h3 className="font-display font-extrabold text-xl text-white">Automated Client Email Engine</h3>
                         <p className="text-xs text-emerald-100/90 leading-relaxed">
-                          We help you remember about recurring client responses. Instant HTML email confirmations and status updates are delivered directly from <code className="font-mono text-white">noreply@shahidkhan.site</code>.
+                          Instant HTML email notifications and status updates are dispatched directly to clients from <code className="font-mono text-white">noreply@shahidkhan.site</code>.
                         </p>
                       </div>
 
@@ -2632,23 +2653,23 @@ export default function App() {
                   </div>
 
 
-                  {/* ROW 2: MINI CHANNEL & KPI CARDS (4 Column Grid - Matches Santander/Citi/Deutsche cards) */}
+                  {/* ROW 2: REALTIME KPI GRID (4 Columns) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     
                     {/* Mini Card 1: Meta Ads */}
                     <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Meta Ads Campaigns</p>
-                          <p className="text-[10px] font-mono text-[var(--text-muted)]">88 **** 9448</p>
+                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Meta Ads Inquiries</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">Facebook & IG Ads</p>
                         </div>
                         <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 flex items-center justify-center font-bold text-xs">
                           f
                         </div>
                       </div>
                       <div className="flex items-baseline justify-between pt-1">
-                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">12.220,65 $</p>
-                        <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">● Active</span>
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">{metaAdsCount} Leads</p>
+                        <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">● Realtime</span>
                       </div>
                     </div>
 
@@ -2657,71 +2678,72 @@ export default function App() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Google Search & PMax</p>
-                          <p className="text-[10px] font-mono text-[var(--text-muted)]">45 **** 8854</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">High-Intent Ads</p>
                         </div>
                         <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center font-bold text-xs">
                           G
                         </div>
                       </div>
                       <div className="flex items-baseline justify-between pt-1">
-                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">25.070,65 $</p>
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">{googleAdsCount} Leads</p>
                         <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-500/10 px-2 py-0.5 rounded-md">● High Intent</span>
                       </div>
                     </div>
 
-                    {/* Mini Card 3: Response Rate SLA */}
+                    {/* Mini Card 3: Open Tickets */}
                     <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Response Rate SLA</p>
-                          <p className="text-[10px] font-mono text-[var(--text-muted)]">67 **** 6821</p>
+                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Open Client Tickets</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">Pending Action</p>
                         </div>
                         <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center">
                           <CheckCircle2 className="w-4 h-4" />
                         </div>
                       </div>
                       <div className="flex items-baseline justify-between pt-1">
-                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">570,00 $</p>
-                        <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">● &lt;15 mins</span>
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">{openTicketsCount} Open</p>
+                        <span className="text-[10px] font-mono font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-md">● Active SLA</span>
                       </div>
                     </div>
 
-                    {/* Mini Card 4: Closed Consultations */}
+                    {/* Mini Card 4: Closed Tickets */}
                     <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Closed Consultations</p>
-                          <p className="text-[10px] font-mono text-[var(--text-muted)]">55 **** 7655</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">Resolved Tickets</p>
                         </div>
                         <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 flex items-center justify-center font-bold text-xs">
-                          CA
+                          ✓
                         </div>
                       </div>
                       <div className="flex items-baseline justify-between pt-1">
-                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">2.680,50 $</p>
-                        <span className="text-[10px] font-mono font-bold text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-md">● 100% Rate</span>
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">{closedTicketsCount} Closed</p>
+                        <span className="text-[10px] font-mono font-bold text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-md">● Resolved</span>
                       </div>
                     </div>
 
                   </div>
 
 
-                  {/* ROW 3: SPLIT BOTTOM PANELS (Latest Inquiries Table & Expense Analytics Donut Chart) */}
+                  {/* ROW 3: SPLIT BOTTOM PANELS (Real-time Inquiries Table & Dynamic Category Analytics) */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     
-                    {/* LEFT PANEL: Latest Inquiries Table (7 Columns) */}
+                    {/* LEFT PANEL: Real-time Inquiries Table (7 Columns) */}
                     <div className="lg:col-span-7 p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-4">
                       
                       <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
                         <div>
-                          <h3 className="font-display font-extrabold text-lg text-[var(--text-primary)]">Latest Inquiries & Tickets</h3>
+                          <h3 className="font-display font-extrabold text-lg text-[var(--text-primary)]">Realtime Inquiries & Tickets</h3>
                           <p className="text-xs text-[var(--text-secondary)]">Manage client strategy requests, send updates, & close tickets.</p>
                         </div>
                         <button 
-                          onClick={() => setAdminTab('leads')}
+                          onClick={fetchLeads}
                           className="w-9 h-9 rounded-2xl bg-emerald-800 text-white flex items-center justify-center hover:bg-emerald-900 cursor-pointer shadow-md"
+                          title="Sync Firestore"
                         >
-                          →
+                          <RefreshCw className={`w-4 h-4 ${loadingLeads ? 'animate-spin' : ''}`} />
                         </button>
                       </div>
 
@@ -2787,8 +2809,10 @@ export default function App() {
                           <tbody className="divide-y divide-[var(--border-color)]">
                             {leadsList.length === 0 ? (
                               <tr>
-                                <td colSpan={5} className="py-8 text-center text-xs text-[var(--text-muted)] italic">
-                                  No inquiries received yet. New submissions will appear here.
+                                <td colSpan={5} className="py-12 text-center text-xs text-[var(--text-muted)] space-y-2">
+                                  <Inbox className="w-8 h-8 text-[var(--text-muted)] mx-auto opacity-50" />
+                                  <p className="font-heading font-bold text-sm text-[var(--text-primary)]">No Active Inquiries</p>
+                                  <p className="text-xs text-[var(--text-secondary)]">Form submissions from the Contact section will automatically sync here in real-time.</p>
                                 </td>
                               </tr>
                             ) : (
@@ -2853,89 +2877,100 @@ export default function App() {
                         </table>
                       </div>
 
-                      <div className="pt-2 border-t border-[var(--border-color)] flex justify-between items-center text-xs font-heading font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
-                        <button onClick={() => setAdminTab('leads')}>See more Inquiries →</button>
-                      </div>
-
                     </div>
 
 
-                    {/* RIGHT PANEL: All Expenses & Donut Chart Breakdown (5 Columns) */}
+                    {/* RIGHT PANEL: Dynamic Real-time Category Breakdown & Donut Chart (5 Columns) */}
                     <div className="lg:col-span-5 p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-6 flex flex-col justify-between">
                       
                       <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
                         <div>
-                          <h3 className="font-display font-extrabold text-lg text-[var(--text-primary)]">All Inquiry Categories</h3>
-                          <p className="text-xs text-[var(--text-secondary)]">Strategy distribution & lead source allocation.</p>
+                          <h3 className="font-display font-extrabold text-lg text-[var(--text-primary)]">Inquiry Category Breakdown</h3>
+                          <p className="text-xs text-[var(--text-secondary)]">Real-time service distribution from Firestore.</p>
                         </div>
-                        <button className="w-9 h-9 rounded-2xl bg-emerald-800 text-white flex items-center justify-center hover:bg-emerald-900 cursor-pointer shadow-md">
-                          →
-                        </button>
+                        <span className="px-2.5 py-1 rounded-full text-[9px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                          ● REALTIME
+                        </span>
                       </div>
 
-                      {/* Daily / Weekly / Monthly Header Stats */}
+                      {/* Header Stats Breakdown */}
                       <div className="grid grid-cols-3 gap-2 text-center pb-2 border-b border-[var(--border-color)]">
                         <div>
-                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">daily</span>
-                          <p className="font-display font-extrabold text-sm sm:text-base text-[var(--text-primary)]">275,40 $</p>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">TOTAL</span>
+                          <p className="font-display font-extrabold text-sm sm:text-base text-[var(--text-primary)]">{totalInquiriesCount}</p>
                         </div>
                         <div>
-                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">weekly</span>
-                          <p className="font-display font-extrabold text-sm sm:text-base text-[var(--text-primary)]">1.420,65 $</p>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">OPEN</span>
+                          <p className="font-display font-extrabold text-sm sm:text-base text-emerald-600">{openTicketsCount}</p>
                         </div>
                         <div>
-                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">monthly</span>
-                          <p className="font-display font-extrabold text-sm sm:text-base text-[var(--text-primary)]">8.200,00 $</p>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">CLOSED</span>
+                          <p className="font-display font-extrabold text-sm sm:text-base text-purple-600">{closedTicketsCount}</p>
                         </div>
                       </div>
 
-                      {/* Donut Chart & Category Legend */}
+                      {/* Dynamic Donut Chart & Category Legend */}
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-2">
                         
-                        {/* Interactive SVG Donut Ring */}
+                        {/* Interactive Dynamic SVG Donut Ring */}
                         <div className="relative w-44 h-44 flex items-center justify-center">
                           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                             {/* Segment 1: Meta Ads (Purple) */}
-                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#8b5cf6" strokeWidth="11" strokeDasharray="95 143" strokeDashoffset="0" />
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#8b5cf6" strokeWidth="11" strokeDasharray={`${metaAdsCount > 0 ? (metaAdsCount / Math.max(1, totalInquiriesCount)) * 238 : 60} 238`} strokeDashoffset="0" />
                             {/* Segment 2: Google Ads (Blue) */}
-                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#3b82f6" strokeWidth="11" strokeDasharray="60 178" strokeDashoffset="-95" />
-                            {/* Segment 3: Full Funnel (Red/Orange) */}
-                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#ef4444" strokeWidth="11" strokeDasharray="45 193" strokeDashoffset="-155" />
-                            {/* Segment 4: E-Commerce (Emerald) */}
-                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#10b981" strokeWidth="11" strokeDasharray="38 200" strokeDashoffset="-200" />
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#3b82f6" strokeWidth="11" strokeDasharray={`${googleAdsCount > 0 ? (googleAdsCount / Math.max(1, totalInquiriesCount)) * 238 : 60} 238`} strokeDashoffset="-60" />
+                            {/* Segment 3: Lead Gen (Red) */}
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#ef4444" strokeWidth="11" strokeDasharray={`${leadGenCount > 0 ? (leadGenCount / Math.max(1, totalInquiriesCount)) * 238 : 60} 238`} strokeDashoffset="-120" />
+                            {/* Segment 4: Web Design (Emerald) */}
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#10b981" strokeWidth="11" strokeDasharray={`${webDesignCount > 0 ? (webDesignCount / Math.max(1, totalInquiriesCount)) * 238 : 58} 238`} strokeDashoffset="-180" />
                           </svg>
 
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
-                            <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Entertainment</span>
-                            <p className="font-display font-extrabold text-lg text-[var(--text-primary)]">8.400 $</p>
+                            <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Total Leads</span>
+                            <p className="font-display font-extrabold text-2xl text-[var(--text-primary)]">{totalInquiriesCount}</p>
                           </div>
                         </div>
 
                         {/* Category Legend List */}
                         <div className="space-y-2 text-xs font-medium text-[var(--text-secondary)] w-full sm:w-auto">
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                            <span>Other</span>
+                          <div className="flex items-center justify-between sm:justify-start gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                              <span>Meta Ads</span>
+                            </div>
+                            <span className="font-bold text-[var(--text-primary)]">{metaAdsCount}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                            <span>Bills</span>
+
+                          <div className="flex items-center justify-between sm:justify-start gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                              <span>Google Search & PMax</span>
+                            </div>
+                            <span className="font-bold text-[var(--text-primary)]">{googleAdsCount}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
-                            <span>Entertainment</span>
+
+                          <div className="flex items-center justify-between sm:justify-start gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                              <span>Lead Gen & Funnels</span>
+                            </div>
+                            <span className="font-bold text-[var(--text-primary)]">{leadGenCount}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
-                            <span>Health</span>
+
+                          <div className="flex items-center justify-between sm:justify-start gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                              <span>Landing Pages & Web</span>
+                            </div>
+                            <span className="font-bold text-[var(--text-primary)]">{webDesignCount}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                            <span>Education</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                            <span>Clothes</span>
+
+                          <div className="flex items-center justify-between sm:justify-start gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                              <span>Other Strategy Requests</span>
+                            </div>
+                            <span className="font-bold text-[var(--text-primary)]">{otherCategoryCount}</span>
                           </div>
                         </div>
 
