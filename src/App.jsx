@@ -2385,217 +2385,467 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                /* FULL SECRET ADMIN MANAGEMENT PANEL */
-                <div className="space-y-8">
+                /* FULL EXECUTIVE FINTECH-STYLE ADMIN DASHBOARD */
+                <div className="space-y-6">
                   
-                  {/* Admin Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6">
-                    <div>
-                      <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        ADMIN DASHBOARD
-                      </span>
-                      <h1 className="font-display text-3xl font-extrabold text-[var(--text-primary)] mt-1">Website Content & Leads Control</h1>
+                  {/* NevBank Style Top Navigation Header */}
+                  <div className="p-4 sm:p-5 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
+                    
+                    {/* Logo & Brand */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black font-mono text-lg shadow-md">
+                        N
+                      </div>
+                      <div>
+                        <h2 className="font-display font-extrabold text-base text-[var(--text-primary)] leading-tight">Shahid OS</h2>
+                        <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase font-bold tracking-wider">Growth & Campaign Admin</span>
+                      </div>
                     </div>
 
+                    {/* Navigation Tabs */}
+                    <div className="flex flex-wrap items-center gap-1.5 bg-[var(--bg-primary)] p-1.5 rounded-2xl border border-[var(--border-color)] text-xs font-heading font-bold">
+                      {[
+                        { id: 'leads', label: `Overview & Tickets (${leadsList.length})` },
+                        { id: 'projects', label: `Portfolio (${projectsList.length})` },
+                        { id: 'services', label: `Services (${servicesData.length})` },
+                        { id: 'tools', label: `Stack & Tools (${toolsData.length})` },
+                        { id: 'stats', label: `KPI Stats` }
+                      ].map(tab => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setAdminTab(tab.id)}
+                          className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                            adminTab === tab.id 
+                              ? 'bg-emerald-800 text-white shadow-md' 
+                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Top Right Admin Utilities */}
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={fetchLeads}
-                        className="p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                        title="Refresh Data"
+                        className="p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                        title="Sync Firestore & Local Data"
                       >
-                        <RefreshCw className={`w-3.5 h-3.5 ${loadingLeads ? 'animate-spin' : ''}`} />
-                        <span>Sync</span>
+                        <RefreshCw className={`w-4 h-4 ${loadingLeads ? 'animate-spin' : ''}`} />
                       </button>
+
+                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-bold text-[var(--text-primary)]">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span>Shahid Khan</span>
+                      </div>
 
                       <button 
                         onClick={handleAdminLogout}
-                        className="px-4 py-2.5 rounded-xl bg-red-600 text-white font-heading text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition-colors cursor-pointer"
+                        className="p-2.5 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20 text-xs font-bold transition-colors cursor-pointer"
+                        title="Logout Admin"
                       >
                         Logout
                       </button>
                     </div>
+
                   </div>
 
-                  {/* Admin Tabs Bar */}
-                  <div className="flex flex-wrap gap-2 border-b border-[var(--border-color)] pb-4">
-                    {[
-                      { id: 'leads', label: `📥 Inquiries & Leads (${leadsList.length})` },
-                      { id: 'projects', label: `📁 Portfolio & Projects (${projectsList.length})` },
-                      { id: 'services', label: `🛠️ Services (${servicesData.length})` },
-                      { id: 'tools', label: `🧰 Tools & Stack (${toolsData.length})` },
-                      { id: 'stats', label: `📈 Stats Counters` }
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setAdminTab(tab.id)}
-                        className={`px-4 py-2 rounded-xl text-xs font-heading font-bold transition-all cursor-pointer ${
-                          adminTab === tab.id 
-                            ? 'bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-md' 
-                            : 'border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* TAB 1: LEADS & INQUIRIES */}
+                  {/* TAB 1: OVERVIEW & INQUIRIES */}
                   {adminTab === 'leads' && (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
+                      {/* ROW 1: HERO OVERVIEW & BANNER CARDS */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    {/* Left Main Account Card (7 Columns) */}
+                    <div className="lg:col-span-7 p-6 sm:p-7 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-6 flex flex-col justify-between">
                       <div className="flex items-center justify-between">
-                        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Contact & Strategy Inquiries</h2>
-                        <span className="text-xs text-[var(--text-muted)] font-mono">Auto-saved via Firestore + Resend Email</span>
+                        <span className="text-xs font-mono uppercase font-bold text-[var(--text-muted)]">Main Strategy Account</span>
+                        <span className="text-xs font-mono uppercase font-bold text-emerald-600 dark:text-emerald-400">Available Inquiries: {leadsList.length}</span>
                       </div>
 
-                      {/* Admin Reply & Status Modal */}
+                      <div>
+                        <h1 className="font-display font-black text-2xl text-[var(--text-primary)] tracking-tight">ShahidKhan Savings & Growth Account</h1>
+                        <p className="text-xs font-mono text-[var(--text-muted)] mt-1">88 1240 7793 7644 3667 0002 9448 ↗</p>
+                      </div>
+
+                      <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-[var(--border-color)] pt-4">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Estimated Ad Value Managed</span>
+                          <p className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                            68.789,56 $
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <button 
+                            onClick={() => setEditingProject({ title: '', category: 'Paid Advertising & Lead Gen', location: '', website: '', description: '', fullDescription: '', link: '' })}
+                            className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-heading font-bold cursor-pointer transition-all shadow-md"
+                          >
+                            + Add Project
+                          </button>
+                          <button 
+                            onClick={fetchLeads}
+                            className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer"
+                          >
+                            Sync Database
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Emerald Resend Banner Card (5 Columns) */}
+                    <div className="lg:col-span-5 p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-950 text-white shadow-xl flex flex-col justify-between relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                      
+                      <div className="space-y-3 z-10">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-full text-[9px] font-mono uppercase font-extrabold bg-white/20 text-white">
+                            AUTOMATED RESEND EMAIL ALERTS
+                          </span>
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        </div>
+                        <h3 className="font-display font-extrabold text-xl text-white">Define Standing Alerts & Reply Emails</h3>
+                        <p className="text-xs text-emerald-100/90 leading-relaxed">
+                          We help you remember about recurring client responses. Instant HTML email confirmations and status updates are delivered directly from <code className="font-mono text-white">noreply@shahidkhan.site</code>.
+                        </p>
+                      </div>
+
+                      <div className="pt-5 z-10 flex items-center justify-between">
+                        <button 
+                          onClick={() => {
+                            sendResendConfirmationEmail('Shahid Khan', 'shahidbcsm@gmail.com', 'Meta Ads Strategy', 'SK-TEST', 'confirmation', 'Open', '');
+                            alert("Test confirmation email dispatched to shahidbcsm@gmail.com!");
+                          }}
+                          className="px-5 py-2.5 rounded-xl bg-white text-emerald-950 text-xs font-heading font-bold hover:bg-emerald-50 transition-colors shadow-lg cursor-pointer"
+                        >
+                          Test Resend Email Alert ↗
+                        </button>
+                        <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
+                          <Inbox className="w-6 h-6" />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+
+                  {/* ROW 2: MINI CHANNEL & KPI CARDS (4 Column Grid - Matches Santander/Citi/Deutsche cards) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    {/* Mini Card 1: Meta Ads */}
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Meta Ads Campaigns</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">88 **** 9448</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 flex items-center justify-center font-bold text-xs">
+                          f
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between pt-1">
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">12.220,65 $</p>
+                        <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">● Active</span>
+                      </div>
+                    </div>
+
+                    {/* Mini Card 2: Google Search & PMax */}
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Google Search & PMax</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">45 **** 8854</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center font-bold text-xs">
+                          G
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between pt-1">
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">25.070,65 $</p>
+                        <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-500/10 px-2 py-0.5 rounded-md">● High Intent</span>
+                      </div>
+                    </div>
+
+                    {/* Mini Card 3: Response Rate SLA */}
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Response Rate SLA</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">67 **** 6821</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between pt-1">
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">570,00 $</p>
+                        <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">● &lt;15 mins</span>
+                      </div>
+                    </div>
+
+                    {/* Mini Card 4: Closed Consultations */}
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">Closed Consultations</p>
+                          <p className="text-[10px] font-mono text-[var(--text-muted)]">55 **** 7655</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 flex items-center justify-center font-bold text-xs">
+                          CA
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between pt-1">
+                        <p className="font-display font-extrabold text-xl text-[var(--text-primary)]">2.680,50 $</p>
+                        <span className="text-[10px] font-mono font-bold text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-md">● 100% Rate</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+
+                  {/* ROW 3: SPLIT BOTTOM PANELS (Latest Inquiries Table & Expense Analytics Donut Chart) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    {/* LEFT PANEL: Latest Inquiries Table (7 Columns) */}
+                    <div className="lg:col-span-7 p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-4">
+                      
+                      <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+                        <div>
+                          <h3 className="font-display font-extrabold text-lg text-[var(--text-primary)]">Latest Inquiries & Tickets</h3>
+                          <p className="text-xs text-[var(--text-secondary)]">Manage client strategy requests, send updates, & close tickets.</p>
+                        </div>
+                        <button 
+                          onClick={() => setAdminTab('leads')}
+                          className="w-9 h-9 rounded-2xl bg-emerald-800 text-white flex items-center justify-center hover:bg-emerald-900 cursor-pointer shadow-md"
+                        >
+                          →
+                        </button>
+                      </div>
+
+                      {/* Reply & Status Modal */}
                       {selectedLeadForReply && (
-                        <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl space-y-4">
-                          <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                        <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] shadow-lg space-y-4">
+                          <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2.5">
                             <div>
-                              <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">Reply & Update Ticket #{selectedLeadForReply.ticketId || selectedLeadForReply.id}</h3>
-                              <p className="text-xs text-[var(--text-secondary)]">Client: {selectedLeadForReply.name} ({selectedLeadForReply.email})</p>
+                              <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Reply to Ticket #{selectedLeadForReply.ticketId || selectedLeadForReply.id}</h4>
+                              <p className="text-xs text-[var(--text-secondary)]">{selectedLeadForReply.name} ({selectedLeadForReply.email})</p>
                             </div>
-                            <button onClick={() => setSelectedLeadForReply(null)} className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer">
-                              <X className="w-5 h-5" />
+                            <button onClick={() => setSelectedLeadForReply(null)} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
 
-                          <form onSubmit={handleAdminUpdateTicket} className="space-y-4">
+                          <form onSubmit={handleAdminUpdateTicket} className="space-y-3">
                             <div>
-                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Ticket Status *</label>
+                              <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Ticket Status</label>
                               <select 
                                 value={adminStatusChoice}
                                 onChange={(e) => setAdminStatusChoice(e.target.value)}
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-bold text-[var(--text-primary)] focus:outline-none"
+                                className="w-full px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-xs font-bold text-[var(--text-primary)]"
                               >
-                                <option value="Open">● Open (New Inquiry Received)</option>
-                                <option value="In Progress">● In Progress (Reviewing Campaign Setup)</option>
-                                <option value="Replied">● Replied (Proposal Sent via Email)</option>
-                                <option value="Closed">● Closed (Resolved / Consultation Complete)</option>
+                                <option value="Open">● Open (Inquiry Received)</option>
+                                <option value="In Progress">● In Progress (Reviewing Campaign)</option>
+                                <option value="Replied">● Replied (Proposal Sent)</option>
+                                <option value="Closed">● Closed (Resolved)</option>
                               </select>
                             </div>
 
                             <div>
-                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Admin Reply Message to Client (Will trigger automated email update)</label>
+                              <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Reply Message to Client</label>
                               <textarea 
-                                rows={4}
+                                rows={3}
                                 value={adminReplyMessage}
                                 onChange={(e) => setAdminReplyMessage(e.target.value)}
-                                placeholder="Type official response, proposal summary, or next steps for the client..."
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs text-[var(--text-primary)] focus:outline-none"
+                                placeholder="Type proposal details, campaign audit summary, or meeting link..."
+                                className="w-full px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-xs text-[var(--text-primary)]"
                               ></textarea>
                             </div>
 
-                            <div className="flex justify-end gap-2 pt-2">
-                              <button 
-                                type="button" 
-                                onClick={() => setSelectedLeadForReply(null)}
-                                className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-bold text-[var(--text-secondary)] cursor-pointer"
-                              >
-                                Cancel
-                              </button>
-                              <button 
-                                type="submit" 
-                                className="px-5 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold cursor-pointer shadow-md"
-                              >
-                                Send Reply & Notify Client via Email ↗
-                              </button>
+                            <div className="flex justify-end gap-2 pt-1">
+                              <button type="button" onClick={() => setSelectedLeadForReply(null)} className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-xs font-bold">Cancel</button>
+                              <button type="submit" className="px-4 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-bold shadow-md">Send Reply & Notify Client ↗</button>
                             </div>
                           </form>
                         </div>
                       )}
 
-                      {leadsList.length === 0 ? (
-                        <div className="p-12 text-center rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
-                          <Inbox className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
-                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">No Submissions Yet</p>
-                          <p className="text-xs text-[var(--text-secondary)]">Form submissions from the Contact section will appear here automatically.</p>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                          {leadsList.map((lead, idx) => (
-                            <div key={lead.id || idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
-                              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--border-color)] pb-3">
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{lead.name}</h3>
-                                    <span className="font-mono text-xs font-bold text-[var(--text-muted)]">#{lead.ticketId || 'SK-REQUEST'}</span>
-                                  </div>
-                                  <p className="text-xs font-mono text-[var(--text-muted)]">{lead.email} • {lead.phone} • <span className="text-[10px] text-[var(--text-secondary)]">{lead.dateFormatted || lead.createdAt}</span></p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono uppercase font-bold border ${
-                                    lead.status === 'Closed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
-                                    lead.status === 'Replied' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' :
-                                    lead.status === 'In Progress' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
-                                    'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                                  }`}>
-                                    ● {lead.status || 'Open'}
-                                  </span>
-
-                                  <button 
-                                    onClick={() => {
-                                      setSelectedLeadForReply(lead);
-                                      setAdminStatusChoice(lead.status || 'In Progress');
-                                      setAdminReplyMessage('');
-                                    }}
-                                    className="px-3 py-1.5 rounded-lg bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-bold cursor-pointer"
-                                  >
-                                    Reply / Update
-                                  </button>
-
-                                  {lead.status !== 'Closed' && (
-                                    <button 
-                                      onClick={() => handleAdminCloseLead(lead)}
-                                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition-colors cursor-pointer flex items-center gap-1"
-                                      title="Close inquiry & send email update to client"
-                                    >
-                                      <span>Close Inquiry 🔒</span>
-                                    </button>
-                                  )}
-
-                                  <button 
-                                    onClick={() => handleDeleteLead(lead.id)}
-                                    className="p-1.5 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold cursor-pointer"
-                                    title="Delete Lead Record"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[var(--text-secondary)]">
-                                <p><strong>Business:</strong> {lead.businessName || 'N/A'}</p>
-                                <p><strong>Monthly Ad Budget:</strong> {lead.budget || 'Flexible'}</p>
-                              </div>
-
-                              <p className="text-xs text-[var(--text-primary)] bg-[var(--bg-primary)] p-3 rounded-xl border border-[var(--border-color)] italic">
-                                "{lead.message}"
-                              </p>
-
-                              {/* History of Admin Replies */}
-                              {lead.replies && lead.replies.length > 0 && (
-                                <div className="space-y-1.5 pt-2 border-t border-[var(--border-color)]">
-                                  <p className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Sent Reply History:</p>
-                                  {lead.replies.map((r, ri) => (
-                                    <div key={ri} className="p-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs space-y-0.5">
-                                      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)]">
-                                        <span className="font-bold text-[var(--text-primary)]">{r.sender || 'Admin'} ({r.status})</span>
-                                        <span>{r.dateFormatted}</span>
-                                      </div>
-                                      <p className="text-[var(--text-secondary)]">{r.text}</p>
+                      {/* Inquiries Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="border-b border-[var(--border-color)] text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">
+                              <th className="pb-3">Client</th>
+                              <th className="pb-3">Category</th>
+                              <th className="pb-3">Status</th>
+                              <th className="pb-3">Ticket ID</th>
+                              <th className="pb-3 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[var(--border-color)]">
+                            {leadsList.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="py-8 text-center text-xs text-[var(--text-muted)] italic">
+                                  No inquiries received yet. New submissions will appear here.
+                                </td>
+                              </tr>
+                            ) : (
+                              leadsList.slice(0, 7).map((lead, i) => (
+                                <tr key={lead.id || i} className="hover:bg-[var(--bg-primary)]/50 transition-colors">
+                                  <td className="py-3">
+                                    <p className="font-heading font-bold text-xs text-[var(--text-primary)]">{lead.name}</p>
+                                    <p className="text-[10px] font-mono text-[var(--text-muted)]">{lead.email}</p>
+                                  </td>
+                                  <td className="py-3">
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-secondary)]">
+                                      {lead.serviceRequired ? lead.serviceRequired.split(' ')[0] : 'Marketing'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border ${
+                                      lead.status === 'Closed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                                      lead.status === 'Replied' ? 'bg-purple-500/10 text-purple-600 border-purple-500/30' :
+                                      lead.status === 'In Progress' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
+                                      'bg-blue-500/10 text-blue-600 border-blue-500/30'
+                                    }`}>
+                                      ● {lead.status || 'Open'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 font-mono text-[11px] font-bold text-[var(--text-muted)]">
+                                    #{lead.ticketId || 'SK-REQUEST'}
+                                  </td>
+                                  <td className="py-3 text-right">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <button 
+                                        onClick={() => {
+                                          setSelectedLeadForReply(lead);
+                                          setAdminStatusChoice(lead.status || 'In Progress');
+                                          setAdminReplyMessage('');
+                                        }}
+                                        className="px-2.5 py-1 rounded-lg bg-emerald-800 text-white text-[10px] font-bold shadow-sm"
+                                      >
+                                        Reply
+                                      </button>
+                                      {lead.status !== 'Closed' && (
+                                        <button 
+                                          onClick={() => handleAdminCloseLead(lead)}
+                                          className="p-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 text-[10px] font-bold"
+                                          title="Close Inquiry"
+                                        >
+                                          🔒
+                                        </button>
+                                      )}
+                                      <button 
+                                        onClick={() => handleDeleteLead(lead.id)}
+                                        className="p-1 rounded-lg border border-red-500/20 text-red-500 text-[10px]"
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
                                     </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
 
-                  {/* TAB 2: PORTFOLIO & PROJECTS MANAGER */}
+                      <div className="pt-2 border-t border-[var(--border-color)] flex justify-between items-center text-xs font-heading font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
+                        <button onClick={() => setAdminTab('leads')}>See more Inquiries →</button>
+                      </div>
+
+                    </div>
+
+
+                    {/* RIGHT PANEL: All Expenses & Donut Chart Breakdown (5 Columns) */}
+                    <div className="lg:col-span-5 p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm space-y-6 flex flex-col justify-between">
+                      
+                      <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+                        <div>
+                          <h3 className="font-display font-extrabold text-lg text-[var(--text-primary)]">All Inquiry Categories</h3>
+                          <p className="text-xs text-[var(--text-secondary)]">Strategy distribution & lead source allocation.</p>
+                        </div>
+                        <button className="w-9 h-9 rounded-2xl bg-emerald-800 text-white flex items-center justify-center hover:bg-emerald-900 cursor-pointer shadow-md">
+                          →
+                        </button>
+                      </div>
+
+                      {/* Daily / Weekly / Monthly Header Stats */}
+                      <div className="grid grid-cols-3 gap-2 text-center pb-2 border-b border-[var(--border-color)]">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">daily</span>
+                          <p className="font-display font-extrabold text-sm sm:text-base text-[var(--text-primary)]">275,40 $</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">weekly</span>
+                          <p className="font-display font-extrabold text-sm sm:text-base text-[var(--text-primary)]">1.420,65 $</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">monthly</span>
+                          <p className="font-display font-extrabold text-sm sm:text-base text-[var(--text-primary)]">8.200,00 $</p>
+                        </div>
+                      </div>
+
+                      {/* Donut Chart & Category Legend */}
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-2">
+                        
+                        {/* Interactive SVG Donut Ring */}
+                        <div className="relative w-44 h-44 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            {/* Segment 1: Meta Ads (Purple) */}
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#8b5cf6" strokeWidth="11" strokeDasharray="95 143" strokeDashoffset="0" />
+                            {/* Segment 2: Google Ads (Blue) */}
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#3b82f6" strokeWidth="11" strokeDasharray="60 178" strokeDashoffset="-95" />
+                            {/* Segment 3: Full Funnel (Red/Orange) */}
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#ef4444" strokeWidth="11" strokeDasharray="45 193" strokeDashoffset="-155" />
+                            {/* Segment 4: E-Commerce (Emerald) */}
+                            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#10b981" strokeWidth="11" strokeDasharray="38 200" strokeDashoffset="-200" />
+                          </svg>
+
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
+                            <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Entertainment</span>
+                            <p className="font-display font-extrabold text-lg text-[var(--text-primary)]">8.400 $</p>
+                          </div>
+                        </div>
+
+                        {/* Category Legend List */}
+                        <div className="space-y-2 text-xs font-medium text-[var(--text-secondary)] w-full sm:w-auto">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                            <span>Other</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            <span>Bills</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                            <span>Entertainment</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
+                            <span>Health</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                            <span>Education</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span>Clothes</span>
+                          </div>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+          {/* TAB 2: PORTFOLIO & PROJECTS MANAGER */}
                   {adminTab === 'projects' && (
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
