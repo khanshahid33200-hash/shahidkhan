@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import heroPhoto from './assets/hero.png';
 import { db } from './firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -84,28 +84,35 @@ const Card3D = ({ children, className = "", depth = 20 }) => {
   );
 };
 
-// Animated Counter Component using Framer Motion
+// Animated Counter Component that starts from 0 when scrolled into view
 const AnimatedCounter = ({ target, suffix = "" }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
   const [count, setCount] = useState(0);
 
   useEffect(() => {
+    if (!isInView) return;
+
     let start = 0;
-    const duration = 2000; // ms
-    const increment = Math.ceil(target / (duration / 30));
+    const duration = 1800; // ms
+    const steps = 50;
+    const increment = target / steps;
+    const stepTime = duration / steps;
+
     const timer = setInterval(() => {
       start += increment;
       if (start >= target) {
         setCount(target);
         clearInterval(timer);
       } else {
-        setCount(start);
+        setCount(Math.floor(start));
       }
-    }, 30);
+    }, stepTime);
 
     return () => clearInterval(timer);
-  }, [target]);
+  }, [isInView, target]);
 
-  return <span>{count}{suffix}</span>;
+  return <span ref={ref}>{count}{suffix}</span>;
 };
 
 export default function App() {
@@ -616,7 +623,7 @@ export default function App() {
         >
           {[
             { label: "Leads Generated", target: 1000, suffix: "+" },
-            { label: "Campaigns Managed", target: 100, suffix: "+" },
+            { label: "Campaigns Managed", target: 50, suffix: "+" },
             { label: "Brands Scaled", target: 5, suffix: "+" },
             { label: "High ROAS Funnels", target: 20, suffix: "+" }
           ].map((stat, idx) => (
@@ -933,23 +940,31 @@ export default function App() {
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 text-center translate-z-10">
                 <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">1000+</p>
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                    <AnimatedCounter target={1000} suffix="+" />
+                  </p>
                   <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Leads Generated</p>
                 </div>
 
                 <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">100+</p>
-                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Paid Campaigns</p>
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                    <AnimatedCounter target={50} suffix="+" />
+                  </p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Campaigns Managed</p>
                 </div>
 
                 <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">5+</p>
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                    <AnimatedCounter target={5} suffix="+" />
+                  </p>
                   <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Brands Scaled</p>
                 </div>
 
                 <div className="p-4 border-r border-[var(--border-color)] last:border-0">
-                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">20+</p>
-                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Funnels & Sites</p>
+                  <p className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                    <AnimatedCounter target={20} suffix="+" />
+                  </p>
+                  <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">High ROAS Funnels</p>
                 </div>
 
                 <div className="p-4 border-r border-[var(--border-color)] last:border-0">
