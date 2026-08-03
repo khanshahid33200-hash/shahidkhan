@@ -3457,65 +3457,92 @@ export default function App() {
               {activeLegalModal === 'privacy' && (
                 <div className="space-y-4">
                   <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    LEGAL COMPLIANCE
+                    LEGAL COMPLIANCE (15 CLAUSES)
                   </span>
                   <h2 className="font-display text-2xl font-extrabold">Privacy Policy</h2>
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                     Last updated: August 2026. At Shahid Khan Digital Marketing ("we", "our"), we respect your privacy and are committed to protecting your personal information.
                   </p>
-                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed">
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">1. Information Collection</h3>
-                    <p>We collect personal information that you voluntarily provide when submitting inquiry forms, booking strategy sessions, or contacting us via WhatsApp or email. This includes your name, business name, phone number, email address, and monthly ad budget.</p>
-
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">2. Use of Information</h3>
-                    <p>Your details are strictly used to evaluate your campaign requirements, deliver client consultations, send automated status notifications via Resend API, and manage ad accounts on Meta & Google Ads platforms.</p>
-
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">3. Data Security & Third Parties</h3>
-                    <p>We never sell, rent, or trade your personal information to third parties. Data is safely stored within encrypted Firebase Firestore databases and serverless endpoints.</p>
+                  
+                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed max-h-[55vh] overflow-y-auto pr-2">
+                    <p><strong>1. Personal Identifiable Information (PII) Collected:</strong> We collect personal details voluntarily provided by website visitors, including full name, business name, email address, phone/WhatsApp number, and monthly ad budget.</p>
+                    <p><strong>2. Automated Tracking & Cookies:</strong> Our website utilizes standard cookies, local storage tokens, and browser session headers to optimize navigation, retain dark/light theme preferences, and track contact ticket submissions.</p>
+                    <p><strong>3. Meta Pixel & Conversions API (CAPI):</strong> We deploy Meta Pixel and CAPI event tracking (ID: 986427389146193) to measure campaign landing page visits and conversion events.</p>
+                    <p><strong>4. Google Analytics 4 (GA4) Integration:</strong> Anonymized user traffic patterns, referral sources, device types, and page view metrics are gathered via Google Analytics to enhance overall web experience.</p>
+                    <p><strong>5. Strict No-Sale Policy:</strong> We pledge never to sell, rent, trade, or monetize your personal or business data to third-party brokers, advertisers, or data aggregators under any circumstances.</p>
+                    <p><strong>6. Purpose of Data Processing:</strong> Collected contact details are strictly processed to schedule growth strategy consultations, deliver customized ad campaign proposals, and send automated email/WhatsApp updates.</p>
+                    <p><strong>7. Resend Email API Delivery Engine:</strong> Transactional thank-you emails and support ticket updates are securely processed via Resend Email API (noreply@shahidkhan.site).</p>
+                    <p><strong>8. Firebase Firestore Database Storage:</strong> Client inquiries and ticket data are securely stored in Google Firebase Cloud Firestore (rb-production-afb2d) with enterprise-grade SSL encryption.</p>
+                    <p><strong>9. Data Retention Duration:</strong> Inbound client inquiry records are retained for a maximum period of 24 months to maintain project communication history, after which they may be permanently purged upon request.</p>
+                    <p><strong>10. Client Right to Access & Erasure:</strong> Clients retain full rights to request a copy of their stored data or demand total deletion of their records by contacting contact@shahidkhan.site.</p>
+                    <p><strong>11. Security Measures & SSL Encryption:</strong> All data transmitted through our web forms is encrypted in transit using 256-bit Secure Sockets Layer (SSL) transport security.</p>
+                    <p><strong>12. Third-Party Service Links:</strong> Our site may contain links to external case study websites or client portals. We are not responsible for the privacy practices or content of third-party domains.</p>
+                    <p><strong>13. Protection of Minors:</strong> Our services are strictly intended for legal business owners and individuals aged 18 and above. We do not knowingly collect information from minors.</p>
+                    <p><strong>14. Policy Modification Notifications:</strong> Updates to this Privacy Policy are posted directly on this page with an updated timestamp tag. Continued usage of the website implies acceptance.</p>
+                    <p><strong>15. Data Protection Contact Officer:</strong> For any privacy concerns, data removal requests, or security inquiries, please email Shahid Khan directly at contact@shahidkhan.site.</p>
                   </div>
                 </div>
               )}
 
               {activeLegalModal === 'refund' && (
                 <div className="space-y-4">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    SERVICE GUARANTEE
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    SERVICE GUARANTEE & REFUND POLICY (15 CLAUSES)
                   </span>
                   <h2 className="font-display text-2xl font-extrabold">Refund Policy</h2>
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    Last updated: August 2026. We strive to maintain 100% transparency regarding retainer fees and marketing strategy setups.
+                    Last updated: August 2026. Please read our refund terms carefully before booking ad management or digital development services.
                   </p>
-                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed">
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">1. Ad Management Retainer Refunds</h3>
-                    <p>100% of management fees are refundable if requested prior to the commencement of market research, pixel setup, or ad account configuration (within 48 hours of invoice payment).</p>
-
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">2. Ad Spend on Ad Networks</h3>
-                    <p>Ad spend paid directly to ad platforms (Meta Ads, Google Ads) is non-refundable as funds are consumed directly by advertising networks for ad impressions and clicks.</p>
-
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">3. Dispute & Processing Timeline</h3>
-                    <p>Approved refund requests are processed within 5 to 7 business days via the original payment method (Razorpay / Bank Transfer).</p>
+                  
+                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed max-h-[55vh] overflow-y-auto pr-2">
+                    <p className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-[var(--text-primary)] font-semibold">
+                      ⚠️ Core Policy Summary: We can issue a refund if a client asks for a return BEFORE spending that money on ad networks (Meta/Google). Absolutely NO refunds are allowed for services such as Landing Page Design, Website Creation, CRO Setup, or Custom Funnel Development once project onboarding has commenced.
+                    </p>
+                    <p><strong>1. Pre-Ad Spend Refund Eligibility:</strong> A full refund of paid ad management retainer fees is eligible ONLY if requested by the client prior to funds being spent on third-party ad networks (Meta Ads, Google Ads).</p>
+                    <p><strong>2. No Refunds for Ad Network Spend:</strong> Once ad capital has been allocated and spent on advertising channels (Facebook, Instagram, Google Search, YouTube, PMax), zero refunds are issued as funds are directly consumed by Meta and Google ad delivery servers.</p>
+                    <p><strong>3. No Refunds on Landing Page & Website Creation:</strong> There is strictly NO REFUND allowed for services such as Landing Page Design, Website Creation, CRO setups, or web portal builds once project onboarding or design work has started.</p>
+                    <p><strong>4. No Refunds for Strategy Consulting & Audits:</strong> Digital marketing campaign strategy, funnel audits, keyword research, and custom audience planning services are strictly non-refundable once delivered.</p>
+                    <p><strong>5. No Refunds on Delivered Creative Assets:</strong> Video ad copy, graphic design banners, ad copywriting, and brand collateral provided to the client are final and non-refundable.</p>
+                    <p><strong>6. Cancellation Request Procedure:</strong> To request an eligible refund prior to ad launching, clients must submit an official written cancellation request via email to contact@shahidkhan.site with their invoice number.</p>
+                    <p><strong>7. Processing Timeline:</strong> Approved refund requests are evaluated and processed within 5 to 7 business days from receipt of the written request.</p>
+                    <p><strong>8. Original Payment Gateway Method:</strong> Refunds are issued exclusively back to the original payment source (Razorpay payment link, UPI, or registered corporate bank account).</p>
+                    <p><strong>9. Partial Refunds for Setup Retainers:</strong> If a project is cancelled prior to ad deployment but after strategy design has commenced, a 20% setup & administrative fee will be retained from the initial deposit.</p>
+                    <p><strong>10. Third-Party Payment Processing Fees:</strong> Any gateway convenience fees charged by third-party processors (Razorpay, Stripe, Banks) are non-refundable.</p>
+                    <p><strong>11. Ad Account Suspensions & Policy Disqualifications:</strong> Shahid Khan is not liable for refunds if a client’s Meta Business Manager or Google Ads account is restricted or suspended due to client policy violations.</p>
+                    <p><strong>12. Client Delays & Abandonment:</strong> Projects where the client fails to provide required access credentials, assets, or feedback within 30 days are considered abandoned and ineligible for refunds.</p>
+                    <p><strong>13. Force Majeure & Platform Outages:</strong> Outages or platform policy changes on Meta, Google, WhatsApp, or hosting providers do not constitute grounds for service refunds.</p>
+                    <p><strong>14. Custom Deliverables & Milestone Authorization:</strong> Payment of project milestone invoices signifies client approval of completed work and forfeits refund claims for that milestone.</p>
+                    <p><strong>15. Final Dispute Resolution:</strong> Shahid Khan reserves the right of final determination on all refund disputes based on ad network timestamp logs and documented work delivery.</p>
                   </div>
                 </div>
               )}
 
               {activeLegalModal === 'terms' && (
                 <div className="space-y-4">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    TERMS OF SERVICE
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    TERMS OF SERVICE (15 CLAUSES)
                   </span>
                   <h2 className="font-display text-2xl font-extrabold">Terms & Conditions</h2>
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                     Last updated: August 2026. By utilizing our performance marketing and web development services, you agree to the following terms.
                   </p>
-                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed">
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">1. Scope of Services</h3>
-                    <p>Shahid Khan provides Meta & Google advertising management, sales funnel architecture, landing page optimization, and lead automation services as agreed upon in campaign proposals.</p>
-
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">2. Client Responsibilities</h3>
-                    <p>Clients are required to provide necessary access to ad accounts, Business Managers, and brand assets. Ad budgets must be funded directly by the client in their respective ad accounts.</p>
-
-                    <h3 className="font-heading font-bold text-sm text-[var(--text-primary)]">3. Performance Disclaimer</h3>
-                    <p>While we apply industry-proven targeting and conversion funnels, overall campaign revenue depends on product market fit, sales team follow-up speed, and external market factors.</p>
+                  
+                  <div className="space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed max-h-[55vh] overflow-y-auto pr-2">
+                    <p><strong>1. Acceptance of Terms:</strong> By accessing this website or engaging Shahid Khan for performance marketing services, you agree to comply with and be bound by these Terms & Conditions.</p>
+                    <p><strong>2. Scope of Growth Services:</strong> Shahid Khan provides Meta Ads management, Google Ads Search/PMax setup, sales funnel architecture, landing page development, and automated lead capture workflows.</p>
+                    <p><strong>3. Client Access Credentials:</strong> Clients agree to provide administrative access to required Meta Business Managers, Google Ads accounts, domains, and CRM platforms necessary for campaign execution.</p>
+                    <p><strong>4. Direct Ad Spend Payment Responsibility:</strong> Ad budgets spent on advertising channels (Meta, Google) are paid directly by the client using their own linked credit cards/billing profiles within their ad accounts.</p>
+                    <p><strong>5. Campaign Performance Disclaimer:</strong> While industry best practices are deployed, performance metrics (CPL, ROAS, Conversions) depend on product quality, pricing, sales follow-up, and market conditions; specific sales volume is not guaranteed.</p>
+                    <p><strong>6. Intellectual Property Rights:</strong> Upon full payment of service invoices, clients own all custom website code, landing page designs, and creative ad assets developed specifically for their brand.</p>
+                    <p><strong>7. Ad Network Compliance:</strong> Clients must ensure their products, services, and business models strictly adhere to Meta Advertising Policies and Google Ads Policies.</p>
+                    <p><strong>8. Suspension of Work for Non-Payment:</strong> Invoices unpaid past 7 calendar days from the due date will result in immediate pausing of active ad campaigns and project deliverables.</p>
+                    <p><strong>9. Client Review & Approvals:</strong> Clients are granted a 5-day review period for ad creatives and landing pages. Silence past 5 days constitutes formal acceptance of deliverables.</p>
+                    <p><strong>10. Limitation of Liability:</strong> Shahid Khan shall not be held liable for indirect, incidental, or consequential damages resulting from ad platform account bans, server downtime, or third-party API outages.</p>
+                    <p><strong>11. Confidentiality & Non-Disclosure:</strong> Both parties agree to maintain strict confidentiality regarding proprietary business strategies, financial records, client lists, and trade secrets.</p>
+                    <p><strong>12. Service Modifications & Pricing:</strong> We reserve the right to modify service package offerings, features, and retainer pricing with a 30-day written notice to active clients.</p>
+                    <p><strong>13. Contract Termination:</strong> Either party may terminate an ongoing retainer agreement by serving a 15-day written notice via official email.</p>
+                    <p><strong>14. Governing Law & Jurisdiction:</strong> These terms are governed by the laws of India. Any legal disputes shall be subject to the exclusive jurisdiction of courts in Jaipur, Rajasthan, India.</p>
+                    <p><strong>15. Entire Agreement:</strong> These Terms & Conditions, alongside signed project proposals, constitute the complete agreement between the client and Shahid Khan Digital Marketing.</p>
                   </div>
                 </div>
               )}
