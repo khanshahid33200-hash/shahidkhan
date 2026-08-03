@@ -45,13 +45,14 @@ import {
   Inbox
 } from 'lucide-react';
 
-// 3D Tilt Card Component reserved ONLY for Hero Photo
+// 3D Tilt Card Component reserved ONLY for Hero Photo (Disabled on Mobile)
 const HeroPhoto3D = ({ children, className = "" }) => {
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e) => {
+    if (typeof window !== 'undefined' && (window.innerWidth < 1024 || 'ontouchstart' in window)) return;
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -67,6 +68,7 @@ const HeroPhoto3D = ({ children, className = "" }) => {
   };
 
   const handleMouseEnter = () => {
+    if (typeof window !== 'undefined' && (window.innerWidth < 1024 || 'ontouchstart' in window)) return;
     setIsHovered(true);
   };
 
@@ -82,9 +84,9 @@ const HeroPhoto3D = ({ children, className = "" }) => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       animate={{
-        rotateX,
-        rotateY,
-        scale: isHovered ? 1.02 : 1,
+        rotateX: (typeof window !== 'undefined' && window.innerWidth < 1024) ? 0 : rotateX,
+        rotateY: (typeof window !== 'undefined' && window.innerWidth < 1024) ? 0 : rotateY,
+        scale: (isHovered && typeof window !== 'undefined' && window.innerWidth >= 1024) ? 1.02 : 1,
       }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
@@ -407,6 +409,18 @@ export default function App() {
   });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [activeProjectFilter, setActiveProjectFilter] = useState('All');
   const [selectedProjectModal, setSelectedProjectModal] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
@@ -1191,10 +1205,10 @@ export default function App() {
 
                   </div>
 
-                  {/* Hero 3D Photo Right */}
+                  {/* Hero Photo Right (Static on Mobile, Animated on Desktop) */}
                   <div className="lg:col-span-5 flex justify-center lg:justify-end perspective-1000 lg:-mt-8">
                     <motion.div 
-                      style={{ 
+                      style={isMobile ? {} : { 
                         scale: photoScale, 
                         y: photoY, 
                         rotateY: photoRotateY, 
