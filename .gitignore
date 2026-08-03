@@ -7,10 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node modules & Build output
 node_modules
 dist
 dist-ssr
 *.local
+
+# Environment variables (CRITICAL: Do NOT commit API keys to git)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+.env*
+
+# Vercel deployment folder
+.vercel
 
 # Editor directories and files
 .vscode/*
@@ -23,14 +36,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Temporary files & screenshots
 portfolio-app
 temp_light.html
 test_screenshot.py
-portfolio_screenshot.png
-portfolio_dark.png
-portfolio_light.png
-reference_match_screenshot.png
-react_portfolio_5173.png
-
-.vercel
-.env*
+*.png
+*.jpg

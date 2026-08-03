@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import heroPhoto from './assets/hero.png';
 import { db } from './firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { initMetaPixel, trackPixelEvent } from './metaPixel';
 import { 
   Sun, 
@@ -29,7 +29,20 @@ import {
   MessageSquare,
   Award,
   Users,
-  Check
+  Check,
+  ArrowLeft,
+  Sparkles,
+  ExternalLink,
+  FileText,
+  ShieldCheck,
+  Lock,
+  Plus,
+  Trash2,
+  Edit3,
+  Save,
+  RefreshCw,
+  Eye,
+  Inbox
 } from 'lucide-react';
 
 // 3D Tilt Card Component reserved ONLY for Hero Photo
@@ -46,7 +59,6 @@ const HeroPhoto3D = ({ children, className = "" }) => {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    // Calculate rotation (-10deg to 10deg tilt)
     const rotateXVal = ((y - centerY) / centerY) * -10;
     const rotateYVal = ((x - centerX) / centerX) * 10;
 
@@ -83,7 +95,7 @@ const HeroPhoto3D = ({ children, className = "" }) => {
   );
 };
 
-// Animated Counter Component that starts from 0 when scrolled into view
+// Animated Counter Component
 const AnimatedCounter = ({ target, suffix = "" }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
@@ -93,7 +105,7 @@ const AnimatedCounter = ({ target, suffix = "" }) => {
     if (!isInView) return;
 
     let start = 0;
-    const duration = 1800; // ms
+    const duration = 1800;
     const steps = 50;
     const increment = target / steps;
     const stepTime = duration / steps;
@@ -114,25 +126,313 @@ const AnimatedCounter = ({ target, suffix = "" }) => {
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
+// Resend Automated Confirmation Email Trigger Function
+const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceRequired) => {
+  const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
+
+  try {
+    // 1. Try Vercel Serverless Endpoint
+    const apiRes = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: visitorName, email: visitorEmail, serviceRequired })
+    });
+
+    if (apiRes.ok) {
+      console.log("Resend email sent via serverless API!");
+      return;
+    }
+  } catch (err) {
+    console.warn("Serverless email endpoint notice, using direct Resend API fallback:", err);
+  }
+
+  // 2. Direct Resend API Fallback
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${RESEND_API_KEY}`
+      },
+      body: JSON.stringify({
+        from: 'Shahid Khan <noreply@shahidkhan.site>',
+        to: [visitorEmail],
+        subject: `Thank you for your Inquiry | Shahid Khan Digital Marketing`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
+            <h2 style="color: #111827; margin-bottom: 12px; font-size: 20px;">Hi ${visitorName},</h2>
+            <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
+              Thank you for reaching out and booking a digital marketing strategy session regarding <strong>${serviceRequired || 'your business growth goals'}</strong>.
+            </p>
+            <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
+              I have successfully received your inquiry and will personally review your project details. I will connect with you within 24 hours via email or WhatsApp (+91 95878 67559).
+            </p>
+            <div style="margin: 24px 0; padding: 16px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #f3f4f6;">
+              <p style="margin: 0; font-size: 13px; font-weight: bold; color: #111827;">What happens next?</p>
+              <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px; color: #4b5563;">
+                <li>Review of your ad campaign goals & industry competition</li>
+                <li>Custom proposal for Meta / Google Ads & Lead Funnel architecture</li>
+                <li>Direct strategy consultation schedule</li>
+              </ul>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+            <div style="font-size: 13px; color: #6b7280;">
+              <p style="margin: 0; font-weight: bold; color: #111827;">Shahid Khan</p>
+              <p style="margin: 4px 0;">Digital Marketer & Growth Specialist</p>
+              <p style="margin: 0;"><a href="https://shahidkhan.site" style="color: #111827; text-decoration: underline;">shahidkhan.site</a> | contact@shahidkhan.site</p>
+            </div>
+          </div>
+        `
+      })
+    });
+    console.log("Resend direct API status:", response.status);
+  } catch (err) {
+    console.warn("Resend email fallback notice:", err);
+  }
+};
+
+// Initial Default Content Data
+const defaultStatsData = [
+  { label: "Leads Generated", target: 1000, suffix: "+" },
+  { label: "Campaigns Managed", target: 50, suffix: "+" },
+  { label: "Brands Scaled", target: 5, suffix: "+" },
+  { label: "High ROAS Funnels", target: 20, suffix: "+" }
+];
+
+const defaultToolsList = [
+  { id: 1, name: "Meta Ads Manager", category: "Paid Ads", desc: "Facebook & Instagram High-ROAS Campaigns" },
+  { id: 2, name: "Google Ads", category: "Search & PMax", desc: "Search, Display & Performance Max Ads" },
+  { id: 3, name: "Meta Pixel & CAPI", category: "Tracking", desc: "Conversion & Custom Event Tracking" },
+  { id: 4, name: "Google Analytics 4", category: "Analytics", desc: "User Behavior & Funnel Analysis" },
+  { id: 5, name: "Canva Pro", category: "Ad Creatives", desc: "High-Converting Ad Banners & Creatives" },
+  { id: 6, name: "Figma", category: "Landing Pages", desc: "UI/UX & High-Conversion Page Layouts" },
+  { id: 7, name: "n8n Automation", category: "Lead Funnels", desc: "Automated Lead Alerts & CRM Sync" },
+  { id: 8, name: "ChatGPT", category: "AI Copywriting", desc: "Ad Copies & Audience Targeting Prompts" },
+  { id: 9, name: "Claude AI", category: "AI Strategy", desc: "Campaign Strategy & Funnel Architecture" },
+  { id: 10, name: "Firebase", category: "CRM Database", desc: "Lead Capture & Realtime Records" },
+  { id: 11, name: "Cloudflare", category: "DNS & Security", desc: "Fast Landing Page CDN & Protection" },
+  { id: 12, name: "HTML5 & CSS3", category: "Landing Pages", desc: "Conversion-Focused Web Structure" },
+  { id: 13, name: "JavaScript", category: "Web Tech", desc: "Custom Tracking & Form Scripts" },
+  { id: 14, name: "React", category: "Frontend", desc: "Ultra-Fast Responsive Web Portals" },
+  { id: 15, name: "Next.js", category: "SEO Tech", desc: "SEO-Optimized Performance Portals" },
+  { id: 16, name: "VS Code", category: "Code Editor", desc: "Custom Scripting & Integration" },
+  { id: 17, name: "GitHub", category: "Version Control", desc: "Deployment & Asset Management" }
+];
+
+const defaultProjectsData = [
+  {
+    id: 1,
+    title: "Shree Jagdamba Furniture",
+    category: "Paid Advertising & Lead Gen",
+    location: "Jaipur, Rajasthan, India",
+    website: "Jaipur Retail Campaign",
+    description: "Targeted Meta Ads campaign paired with a custom web booking catalog, driving consistent high-intent local customer inquiries and direct furniture orders.",
+    fullDescription: "Developed an end-to-end digital acquisition strategy for a premier furniture manufacturer and showroom in Jaipur. Created high-converting Meta Video and Carousel Ads showcasing luxury home sofa sets, dining tables, and bedroom collections targeted at homeowners within a 35km radius. Integrated a fast web booking catalog with automated WhatsApp inquiry routing.",
+    strategy: [
+      "Hyper-local Geo-targeting within Jaipur (35km radius around showroom)",
+      "Lookalike Audiences built from high-value past customers",
+      "Meta Click-to-WhatsApp direct lead funnel for instant customer inquiries",
+      "A/B tested promotional ad creative banners during festive buying seasons"
+    ],
+    results: [
+      "100+ High-intent furniture buyer inquiries generated in 60 days",
+      "4.2x Return on Ad Spend (ROAS) on Meta paid campaigns",
+      "20% Increase in direct showroom footfall and offline sales conversions"
+    ],
+    services: ["Meta Advertising", "Lead Generation", "Business Website", "Online Booking", "CRM Setup"],
+    link: ""
+  },
+  {
+    id: 2,
+    title: "Shikva Foundation",
+    category: "NGO Marketing & Growth",
+    location: "New Delhi, India",
+    website: "shikvaafoundation.org",
+    description: "Social media fundraising strategy and donation web application with Razorpay integration, expanding nationwide donor participation for social causes.",
+    fullDescription: "Architected a nationwide digital fundraising ecosystem for Shikva Foundation, a leading non-profit organization focused on child education and community welfare. Designed and deployed a custom React/Next.js donation web portal equipped with seamless Razorpay payment gateway integration, automated 80G tax receipt generation, and real-time donation progress bars.",
+    strategy: [
+      "Emotion-driven Meta & Instagram Video campaigns focused on child education",
+      "Remarketing funnels to re-engage one-time donors into recurring monthly supporters",
+      "Razorpay Webhook integration for instant tax receipts and donor WhatsApp thank-you alerts",
+      "SEO optimized campaign landing pages built for high speed and mobile responsiveness"
+    ],
+    results: [
+      "₹1.5 Lakh+ Total online donations raised across 3 national campaign drives",
+      "200+ Active recurring monthly donors onboarded",
+      "99.8% Payment processing success rate with zero gateway drop-offs"
+    ],
+    services: ["Social Media Marketing", "Donation Campaigns", "Donation Website", "Payment Gateway Integration"],
+    link: "https://shikvaafoundation.org"
+  },
+  {
+    id: 3,
+    title: "Day Foundation",
+    category: "NGO Marketing & Growth",
+    location: "Jabalpur, MP, India",
+    website: "dayfoundation.in",
+    description: "Multi-channel volunteer recruitment and fundraising campaigns combined with a volunteer & internship registration portal.",
+    fullDescription: "Built a comprehensive online volunteer recruitment and fundraising portal for Day Foundation. Engineered an interactive multi-step registration workflow that allowed students and young professionals across India to apply for internships, sign up for social drives, and contribute to cause-based campaigns.",
+    strategy: [
+      "Instagram & Facebook Lead Form ads targeting youth, college students, and young professionals",
+      "Automated Firebase Firestore database for instant candidate sorting and status tracking",
+      "Razorpay online donation integration for micro-fundraising campaigns"
+    ],
+    results: [
+      "450+ Verified volunteers and interns recruited nationwide",
+      "Expanded organizational operations to over 3 Indian cities",
+      "Saved 20+ hours per week in manual volunteer application sorting via database automation"
+    ],
+    services: ["Fundraising Campaigns", "Volunteer Recruitment", "Internship Portal", "Payment Integration"],
+    link: "https://dayfoundation.in"
+  },
+  {
+    id: 4,
+    title: "Radhey Krishna Sports Shop",
+    category: "Paid Advertising & Lead Gen",
+    location: "Jaipur, Rajasthan, India",
+    website: "Local Showroom Lead Funnel",
+    description: "Hyper-local Meta & Instagram ads strategy driving footfalls and online inquiries for a premium local sports showroom.",
+    fullDescription: "Formulated a local retail promotion strategy for a major sports equipment and apparel retailer in Jaipur. Designed vibrant ad creatives highlighting specialized cricket gear, fitness machinery, and sportswear, coupled with limited-time discount codes claimed via WhatsApp lead forms.",
+    strategy: [
+      "Meta Click-to-WhatsApp ad campaigns targeting sports & fitness enthusiasts",
+      "Interest-based audience segmentation (Cricket gear, Gym equipment, Sports apparel)",
+      "Exclusive discount code lead generation landing page"
+    ],
+    results: [
+      "450+ Verified customer leads generated with Cost Per Lead (CPL) under ₹28",
+      "₹3.5 Lakh+ Additional showroom revenue generated within 45 days",
+      "Built an active WhatsApp customer marketing list of 1,000+ local buyers"
+    ],
+    services: ["Meta Ads", "Hyper-Local Marketing", "Brand Promotion", "Lead Generation"],
+    link: ""
+  },
+  {
+    id: 5,
+    title: "Media Levelling",
+    category: "Agency Marketing & Funnels",
+    location: "Agency Portal (Pan-India)",
+    website: "media-levelling.com",
+    description: "Comprehensive digital marketing and website redesign for a growth agency, optimizing lead distribution and client acquisition funnels.",
+    fullDescription: "Re-engineered the digital client acquisition funnel for Media Levelling, a full-service digital agency. Designed a sleek, ultra-fast agency web portal showcasing case studies and services, integrated with an n8n workflow that automatically routes inbound leads directly to sales representatives via Slack and WhatsApp.",
+    strategy: [
+      "B2B Meta & LinkedIn ad campaigns targeting business owners and marketing directors",
+      "Conversion Rate Optimization (CRO) on agency service landing pages",
+      "Automated lead scoring and instant CRM distribution system via n8n"
+    ],
+    results: [
+      "140% Increase in website visitor-to-lead conversion rate",
+      "Sales team lead response time reduced from 4 hours to under 2 minutes",
+      "Generated 80+ qualified B2B agency consultation calls"
+    ],
+    services: ["Agency Marketing", "Meta Ads", "Website Redesign", "Lead Distribution Funnel"],
+    link: "https://media-levelling.com"
+  },
+  {
+    id: 6,
+    title: "Local Retail & Service Clients",
+    category: "Paid Advertising & Lead Gen",
+    location: "Pan-India",
+    website: "Multi-Industry Growth Campaigns",
+    description: "High-converting landing pages, Meta/Google ad setups, and automated CRM lead capture systems engineered to lower client acquisition costs.",
+    fullDescription: "Executed tailored performance marketing campaigns for a portfolio of local retail outlets, coaching institutes, real estate consultants, and healthcare providers across India. Provided end-to-end setup including Meta Pixel CAPI, Google Ads Search campaigns, custom landing pages, and lead tracking.",
+    strategy: [
+      "Google Ads Search campaigns targeting high-intent local buyers",
+      "Meta Retargeting campaigns to capture warm landing page visitors",
+      "Conversion tracking setup via Meta Pixel, CAPI, and Google Analytics 4"
+    ],
+    results: [
+      "Consistently reduced client acquisition costs (CPL) by 25% to 40%",
+      "Over 1,000+ Total verified leads delivered across diverse business sectors",
+      "100% Client retention on monthly ad management retainers"
+    ],
+    services: ["Lead Generation", "Meta Ads Management", "Landing Page Design", "CRM Automation"],
+    link: ""
+  }
+];
+
+const defaultServicesList = [
+  { id: 1, name: "Meta Ads Management (FB & IG)", desc: "End-to-end Meta paid ad campaigns with laser-targeted audience reach, ad creative testing, and high ROAS optimization." },
+  { id: 2, name: "Google Ads (Search & PMax)", desc: "Capturing high-intent customer searches through Google Search, Display, and Performance Max advertising." },
+  { id: 3, name: "B2B & B2C Lead Generation", desc: "Building full lead capture funnels that consistently deliver pre-qualified client inquiries to your business." },
+  { id: 4, name: "High-Converting Landing Pages", desc: "Designing conversion-first landing pages optimized for fast load speeds and maximum ad click-to-lead conversion." },
+  { id: 5, name: "Conversion Rate Optimization (CRO)", desc: "Analyzing user behavior and A/B testing page elements to maximize sales from your existing website traffic." },
+  { id: 6, name: "Retargeting & Remarketing", desc: "Setting up retargeting funnels on Meta & Google to re-engage website visitors and close lost prospects." },
+  { id: 7, name: "Meta Pixel & GA4 Analytics", desc: "Installing and verifying Meta Pixel, CAPI, and Google Analytics 4 for accurate conversion tracking." },
+  { id: 8, name: "Social Media Marketing (SMM)", desc: "Strategic content planning, brand positioning, and social channel management to build brand authority." },
+  { id: 9, name: "SEO & Local Search Ranking", desc: "On-page SEO optimization and local search setup to capture organic customer traffic in your target area." },
+  { id: 10, name: "CRM Setup & Lead Automation", desc: "Connecting lead forms directly to CRM systems and n8n workflows for instant WhatsApp and email notifications." },
+  { id: 11, name: "Business Website Development", desc: "Building modern, fast, responsive websites structured specifically around lead capture and business presentation." },
+  { id: 12, name: "Razorpay Payment Gateway", desc: "Seamless payment integration for client deposits, online product orders, or NGO donation processing." },
+  { id: 13, name: "AI Copywriting & Ad Creatives", desc: "Crafting persuasive ad headlines, engaging copy, and eye-catching ad visuals using AI tools and Canva." },
+  { id: 14, name: "Full-Funnel Growth Strategy", desc: "Custom digital marketing roadmap tailored to your specific industry, budget, and revenue goals." }
+];
+
 export default function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('portfolio_theme') || 'light';
   });
 
+  // Clean Path Routing State (Valid paths: home, about, services, projects, contact, admin)
+  const [activePage, setActivePage] = useState(() => {
+    const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    if (path === 'portfolio') return 'projects';
+    return ['about', 'services', 'projects', 'contact', 'admin'].includes(path) ? path : 'home';
+  });
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeProjectFilter, setActiveProjectFilter] = useState('All');
+  const [selectedProjectModal, setSelectedProjectModal] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Dynamic Editable Site Content State
+  const [siteStats, setSiteStats] = useState(() => {
+    const saved = localStorage.getItem('site_stats');
+    return saved ? JSON.parse(saved) : defaultStatsData;
+  });
+
+  const [projectsList, setProjectsList] = useState(() => {
+    const saved = localStorage.getItem('site_projects');
+    return saved ? JSON.parse(saved) : defaultProjectsData;
+  });
+
+  const [servicesData, setServicesData] = useState(() => {
+    const saved = localStorage.getItem('site_services');
+    return saved ? JSON.parse(saved) : defaultServicesList;
+  });
+
+  const [toolsData, setToolsData] = useState(() => {
+    const saved = localStorage.getItem('site_tools');
+    return saved ? JSON.parse(saved) : defaultToolsList;
+  });
+
+  // Admin Dashboard States
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+    return localStorage.getItem('admin_session') === 'true';
+  });
+  const [adminPasscode, setAdminPasscode] = useState('');
+  const [adminPassError, setAdminPassError] = useState(false);
+  const [adminTab, setAdminTab] = useState('leads');
+  const [leadsList, setLeadsList] = useState(() => {
+    const saved = localStorage.getItem('site_leads');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [loadingLeads, setLoadingLeads] = useState(false);
+
+  // Editable Form States for Admin
+  const [editingProject, setEditingProject] = useState(null);
+  const [editingService, setEditingService] = useState(null);
+  const [editingTool, setEditingTool] = useState(null);
 
   // Custom Cursor state
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [cursorHovered, setCursorHovered] = useState(false);
 
-  // Scroll driven animation: Hero photo reduces in size and travels DOWN into next section
+  // Scroll driven animation for Hero Photo
   const { scrollY } = useScroll();
   const photoScale = useTransform(scrollY, [0, 500], [1, 0.72]);
-  const photoY = useTransform(scrollY, [0, 500], [0, 160]); // Compact downward travel
+  const photoY = useTransform(scrollY, [0, 500], [0, 160]);
   const photoRotateY = useTransform(scrollY, [0, 500], [0, 8]);
   const photoRotateZ = useTransform(scrollY, [0, 500], [0, 2]);
 
@@ -144,6 +444,83 @@ export default function App() {
   useEffect(() => {
     initMetaPixel();
   }, []);
+
+  // Robust Fetch Leads (combines LocalStorage and Firestore safely)
+  const fetchLeads = async () => {
+    setLoadingLeads(true);
+    let localLeads = [];
+    try {
+      localLeads = JSON.parse(localStorage.getItem('site_leads') || '[]');
+    } catch (e) {
+      localLeads = [];
+    }
+
+    if (db) {
+      try {
+        const snapshot = await getDocs(collection(db, "contacts"));
+        const remoteLeads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        const leadMap = new Map();
+        [...localLeads, ...remoteLeads].forEach(item => {
+          if (item && (item.email || item.name)) {
+            const key = item.id || (item.email + '_' + item.name + '_' + (item.createdAt || ''));
+            leadMap.set(key, item);
+          }
+        });
+
+        const combined = Array.from(leadMap.values());
+        setLeadsList(combined);
+        localStorage.setItem('site_leads', JSON.stringify(combined));
+      } catch (err) {
+        console.warn("Firestore fetch notice, using local storage leads:", err);
+        setLeadsList(localLeads);
+      }
+    } else {
+      setLeadsList(localLeads);
+    }
+    setLoadingLeads(false);
+  };
+
+  useEffect(() => {
+    if (activePage === 'admin' && isAdminAuthenticated) {
+      fetchLeads();
+    }
+  }, [activePage, isAdminAuthenticated]);
+
+  // HTML5 History popstate listener
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      if (path === 'portfolio') {
+        setActivePage('projects');
+      } else if (['about', 'services', 'projects', 'contact', 'admin'].includes(path)) {
+        setActivePage(path);
+      } else {
+        setActivePage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (page, sectionId = null) => {
+    setActivePage(page);
+    let targetPath = page === 'home' ? '/' : `/${page}`;
+    if (page === 'projects') targetPath = '/portfolio';
+    
+    window.history.pushState({}, '', targetPath);
+    setMobileMenuOpen(false);
+    
+    if (sectionId) {
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -171,6 +548,7 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  // Submit Contact & Application Form
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -184,30 +562,53 @@ export default function App() {
     const budget = formData.get('budget') || '';
     const message = formData.get('message') || '';
 
+    const leadId = 'lead_' + Date.now();
+    const dateFormatted = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
+
+    const localLead = {
+      id: leadId,
+      name,
+      email,
+      phone,
+      businessName,
+      serviceRequired,
+      budget,
+      message,
+      type: "Digital Marketing Lead",
+      createdAt: dateFormatted,
+      dateFormatted
+    };
+
+    // 1. Instantly save to LocalStorage so lead is NEVER lost
     try {
-      if (db) {
-        await addDoc(collection(db, "contacts"), {
-          name,
-          email,
-          phone,
-          businessName,
-          serviceRequired,
-          budget,
-          message,
-          type: "Digital Marketing Lead",
-          createdAt: serverTimestamp()
-        });
-      }
+      const existingLeads = JSON.parse(localStorage.getItem('site_leads') || '[]');
+      const updatedLeads = [localLead, ...existingLeads];
+      localStorage.setItem('site_leads', JSON.stringify(updatedLeads));
+      setLeadsList(updatedLeads);
     } catch (err) {
-      console.warn("Firebase record notice:", err);
+      console.warn("LocalStorage lead save notice:", err);
     }
 
-    // Track Meta Pixel Lead event
+    // 2. Safely attempt Firestore save
+    try {
+      if (db) {
+        await addDoc(collection(db, "contacts"), localLead);
+      }
+    } catch (err) {
+      console.warn("Firestore backup save notice:", err);
+    }
+
+    // 3. Trigger Meta Pixel Lead Event
     trackPixelEvent('Lead', {
       content_name: serviceRequired || 'Digital Marketing Inquiry',
       value: 1.00,
       currency: 'USD'
     });
+
+    // 4. Trigger Automated Confirmation Email via Resend
+    if (email) {
+      sendResendConfirmationEmail(name, email, serviceRequired);
+    }
 
     setSubmitting(false);
     setFormSubmitted(true);
@@ -215,28 +616,173 @@ export default function App() {
     e.target.reset();
   };
 
-  // Marketing Focused Tools List (17 tools)
-  const toolsList = [
-    { name: "Meta Ads Manager", category: "Paid Ads", desc: "Facebook & Instagram High-ROAS Campaigns" },
-    { name: "Google Ads", category: "Search & PMax", desc: "Search, Display & Performance Max Ads" },
-    { name: "Meta Pixel & CAPI", category: "Tracking", desc: "Conversion & Custom Event Tracking" },
-    { name: "Google Analytics 4", category: "Analytics", desc: "User Behavior & Funnel Analysis" },
-    { name: "Canva Pro", category: "Ad Creatives", desc: "High-Converting Ad Banners & Creatives" },
-    { name: "Figma", category: "Landing Pages", desc: "UI/UX & High-Conversion Page Layouts" },
-    { name: "n8n Automation", category: "Lead Funnels", desc: "Automated Lead Alerts & CRM Sync" },
-    { name: "ChatGPT", category: "AI Copywriting", desc: "Ad Copies & Audience Targeting Prompts" },
-    { name: "Claude AI", category: "AI Strategy", desc: "Campaign Strategy & Funnel Architecture" },
-    { name: "Firebase", category: "CRM Database", desc: "Lead Capture & Realtime Records" },
-    { name: "Cloudflare", category: "DNS & Security", desc: "Fast Landing Page CDN & Protection" },
-    { name: "HTML5 & CSS3", category: "Landing Pages", desc: "Conversion-Focused Web Structure" },
-    { name: "JavaScript", category: "Web Tech", desc: "Custom Tracking & Form Scripts" },
-    { name: "React", category: "Frontend", desc: "Ultra-Fast Responsive Web Portals" },
-    { name: "Next.js", category: "SEO Tech", desc: "SEO-Optimized Performance Portals" },
-    { name: "VS Code", category: "Code Editor", desc: "Custom Scripting & Integration" },
-    { name: "GitHub", category: "Version Control", desc: "Deployment & Asset Management" }
-  ];
+  // Admin Passcode Authentication
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminPasscode === 'admin123' || adminPasscode === 'shahid2026') {
+      setIsAdminAuthenticated(true);
+      localStorage.setItem('admin_session', 'true');
+      setAdminPassError(false);
+      fetchLeads();
+    } else {
+      setAdminPassError(true);
+    }
+  };
 
-  // Skills Data (Marketing First)
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
+    localStorage.removeItem('admin_session');
+    navigateTo('home');
+  };
+
+  // Project Admin Operations
+  const handleSaveProject = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const title = form.title.value;
+    const category = form.category.value;
+    const location = form.location.value;
+    const website = form.website.value;
+    const description = form.description.value;
+    const fullDescription = form.fullDescription.value;
+    const link = form.link.value;
+
+    let updatedProjects;
+    if (editingProject && editingProject.id) {
+      updatedProjects = projectsList.map(p => p.id === editingProject.id ? {
+        ...p,
+        title,
+        category,
+        location,
+        website,
+        description,
+        fullDescription,
+        link
+      } : p);
+    } else {
+      const newProj = {
+        id: Date.now(),
+        title,
+        category,
+        location,
+        website,
+        description,
+        fullDescription,
+        strategy: ["Custom ad creative testing", "Targeted Meta & Google audience reach", "Lead capture funnel setup"],
+        results: ["Increased lead volume", "Optimized acquisition cost"],
+        services: ["Digital Marketing", "Lead Generation"],
+        link
+      };
+      updatedProjects = [newProj, ...projectsList];
+    }
+
+    setProjectsList(updatedProjects);
+    localStorage.setItem('site_projects', JSON.stringify(updatedProjects));
+    setEditingProject(null);
+  };
+
+  const handleDeleteProject = (id) => {
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      const updated = projectsList.filter(p => p.id !== id);
+      setProjectsList(updated);
+      localStorage.setItem('site_projects', JSON.stringify(updated));
+    }
+  };
+
+  // Service Admin Operations
+  const handleSaveService = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    const desc = form.desc.value;
+
+    let updatedServices;
+    if (editingService && editingService.id) {
+      updatedServices = servicesData.map(s => s.id === editingService.id ? { ...s, name, desc } : s);
+    } else {
+      const newSrv = { id: Date.now(), name, desc };
+      updatedServices = [...servicesData, newSrv];
+    }
+
+    setServicesData(updatedServices);
+    localStorage.setItem('site_services', JSON.stringify(updatedServices));
+    setEditingService(null);
+  };
+
+  const handleDeleteService = (id) => {
+    if (window.confirm("Delete this service item?")) {
+      const updated = servicesData.filter(s => s.id !== id);
+      setServicesData(updated);
+      localStorage.setItem('site_services', JSON.stringify(updated));
+    }
+  };
+
+  // Tool Admin Operations
+  const handleSaveTool = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    const category = form.category.value;
+    const desc = form.desc.value;
+
+    let updatedTools;
+    if (editingTool && editingTool.id) {
+      updatedTools = toolsData.map(t => t.id === editingTool.id ? { ...t, name, category, desc } : t);
+    } else {
+      const newTool = { id: Date.now(), name, category, desc };
+      updatedTools = [...toolsData, newTool];
+    }
+
+    setToolsData(updatedTools);
+    localStorage.setItem('site_tools', JSON.stringify(updatedTools));
+    setEditingTool(null);
+  };
+
+  const handleDeleteTool = (id) => {
+    if (window.confirm("Delete this tool item?")) {
+      const updated = toolsData.filter(t => t.id !== id);
+      setToolsData(updated);
+      localStorage.setItem('site_tools', JSON.stringify(updated));
+    }
+  };
+
+  // Stats Admin Operations
+  const handleSaveStats = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const newStats = [
+      { label: form.label0.value, target: parseInt(form.target0.value) || 0, suffix: form.suffix0.value },
+      { label: form.label1.value, target: parseInt(form.target1.value) || 0, suffix: form.suffix1.value },
+      { label: form.label2.value, target: parseInt(form.target2.value) || 0, suffix: form.suffix2.value },
+      { label: form.label3.value, target: parseInt(form.target3.value) || 0, suffix: form.suffix3.value }
+    ];
+    setSiteStats(newStats);
+    localStorage.setItem('site_stats', JSON.stringify(newStats));
+    alert("Statistics updated successfully!");
+  };
+
+  // Delete Lead Operation
+  const handleDeleteLead = async (id) => {
+    if (window.confirm("Are you sure you want to delete this lead submission?")) {
+      const updated = leadsList.filter(l => l.id !== id);
+      setLeadsList(updated);
+      localStorage.setItem('site_leads', JSON.stringify(updated));
+      
+      if (db && id && !id.startsWith('lead_')) {
+        try {
+          await deleteDoc(doc(db, "contacts", id));
+        } catch (err) {
+          console.warn("Firestore lead delete notice:", err);
+        }
+      }
+    }
+  };
+
+  const filteredProjects = activeProjectFilter === 'All' 
+    ? projectsList 
+    : projectsList.filter(p => p.category === activeProjectFilter);
+
+  // Marketing Capabilities Categories (Shown in About Page)
   const skillsCategories = [
     {
       title: "Digital Marketing & Paid Ads",
@@ -260,105 +806,7 @@ export default function App() {
     }
   ];
 
-  // Projects Data (Marketing Outcome Focused)
-  const projectsData = [
-    {
-      id: 1,
-      title: "Shree Jagdamba Furniture",
-      category: "Paid Advertising & Lead Gen",
-      location: "Jaipur, India",
-      description: "Targeted Meta Ads campaign paired with a custom web booking catalog, driving consistent high-intent local customer inquiries and direct furniture orders.",
-      services: ["Meta Advertising", "Lead Generation", "Business Website", "Online Booking", "CRM Setup"],
-      link: null
-    },
-    {
-      id: 2,
-      title: "Shikva Foundation",
-      category: "NGO Marketing & Growth",
-      location: "New Delhi, India",
-      website: "shikvafoundation.org",
-      description: "Social media fundraising strategy and donation web application with Razorpay integration, expanding nationwide donor participation for social causes.",
-      services: ["Social Media Marketing", "Donation Campaigns", "Donation Website", "Payment Gateway Integration"],
-      link: "https://shikvafoundation.org"
-    },
-    {
-      id: 3,
-      title: "Day Foundation",
-      category: "NGO Marketing & Growth",
-      location: "Jabalpur, India",
-      website: "dayfoundation.in",
-      description: "Multi-channel volunteer recruitment and fundraising campaigns combined with a volunteer & internship registration portal.",
-      services: ["Fundraising Campaigns", "Volunteer Recruitment", "Internship Portal", "Payment Integration"],
-      link: "https://dayfoundation.in"
-    },
-    {
-      id: 4,
-      title: "Radhey Krishna Sports Shop",
-      category: "Paid Advertising & Lead Gen",
-      location: "Jaipur, India",
-      description: "Hyper-local Meta & Instagram ads strategy driving footfalls and online inquiries for a premium local sports showroom.",
-      services: ["Meta Ads", "Hyper-Local Marketing", "Brand Promotion", "Lead Generation"],
-      link: null
-    },
-    {
-      id: 5,
-      title: "Media Levelling",
-      category: "Agency Marketing & Funnels",
-      location: "Agency Portal",
-      website: "media-levelling.com",
-      description: "Comprehensive digital marketing and website redesign for a growth agency, optimizing lead distribution and client acquisition funnels.",
-      services: ["Agency Marketing", "Meta Ads", "Website Redesign", "Lead Distribution Funnel"],
-      link: "https://media-levelling.com"
-    },
-    {
-      id: 6,
-      title: "Local Retail & Service Clients",
-      category: "Paid Advertising & Lead Gen",
-      location: "Pan-India",
-      description: "High-converting landing pages, Meta/Google ad setups, and automated CRM lead capture systems engineered to lower client acquisition costs.",
-      services: ["Lead Generation", "Meta Ads Management", "Landing Page Design", "CRM Automation"],
-      link: null
-    }
-  ];
-
-  // 14 Digital Marketing Focused Services
-  const servicesList = [
-    { name: "Meta Ads Management (FB & IG)", desc: "End-to-end Meta paid ad campaigns with laser-targeted audience reach, ad creative testing, and high ROAS optimization." },
-    { name: "Google Ads (Search & PMax)", desc: "Capturing high-intent customer searches through Google Search, Display, and Performance Max advertising." },
-    { name: "B2B & B2C Lead Generation", desc: "Building full lead capture funnels that consistently deliver pre-qualified client inquiries to your business." },
-    { name: "High-Converting Landing Pages", desc: "Designing conversion-first landing pages optimized for fast load speeds and maximum ad click-to-lead conversion." },
-    { name: "Conversion Rate Optimization (CRO)", desc: "Analyzing user behavior and A/B testing page elements to maximize sales from your existing website traffic." },
-    { name: "Retargeting & Remarketing", desc: "Setting up retargeting funnels on Meta & Google to re-engage website visitors and close lost prospects." },
-    { name: "Meta Pixel & GA4 Analytics", desc: "Installing and verifying Meta Pixel, CAPI, and Google Analytics 4 for accurate conversion tracking." },
-    { name: "Social Media Marketing (SMM)", desc: "Strategic content planning, brand positioning, and social channel management to build brand authority." },
-    { name: "SEO & Local Search Ranking", desc: "On-page SEO optimization and local search setup to capture organic customer traffic in your target area." },
-    { name: "CRM Setup & Lead Automation", desc: "Connecting lead forms directly to CRM systems and n8n workflows for instant WhatsApp and email notifications." },
-    { name: "Business Website Development", desc: "Building modern, fast, responsive websites structured specifically around lead capture and business presentation." },
-    { name: "Razorpay Payment Gateway", desc: "Seamless payment integration for client deposits, online product orders, or NGO donation processing." },
-    { name: "AI Copywriting & Ad Creatives", desc: "Crafting persuasive ad headlines, engaging copy, and eye-catching ad visuals using AI tools and Canva." },
-    { name: "Full-Funnel Growth Strategy", desc: "Custom digital marketing roadmap tailored to your specific industry, budget, and revenue goals." }
-  ];
-
-  // Marketing Testimonials
-  const testimonials = [
-    {
-      quote: "Shahid transformed our online presence and ad strategy. Our lead volume doubled while keeping lead costs surprisingly low.",
-      author: "Founder, Retail & Furniture Business",
-      role: "Jaipur, India"
-    },
-    {
-      quote: "Excellent expertise in Meta Ads and campaign management. Shahid knows how to structure campaigns that deliver real client inquiries.",
-      author: "Marketing Director, Media Levelling Agency",
-      role: "New Delhi, India"
-    },
-    {
-      quote: "Highly reliable for digital marketing and fundraising. The online donation portal and ad campaigns brought national donor support.",
-      author: "Operations Lead, Non-Profit Organization",
-      role: "Pan-India"
-    }
-  ];
-
-  // Marketing Workflow Process
+  // Workflow Steps (On Home page)
   const processSteps = [
     { step: "01", title: "Strategy & Audience Research", desc: "Analyzing your target customer profile, competitor ads, offer structure, and campaign objectives." },
     { step: "02", title: "Funnel & Creative Planning", desc: "Designing high-converting ad copy, visual assets, landing page layouts, and lead capture forms." },
@@ -368,7 +816,7 @@ export default function App() {
     { step: "06", title: "Reporting & Scaling", desc: "Delivering detailed performance reports, lead counts, and scaling budget for maximum profit growth." }
   ];
 
-  // Marketing FAQ
+  // FAQ Items (On Home page)
   const faqItems = [
     { q: "What digital marketing services do you specialize in?", a: "I specialize in Meta Ads (Facebook & Instagram), Google Ads (Search & PMax), Lead Generation, High-Converting Landing Page Design, SEO, Meta Pixel & GA4 Analytics, and n8n Lead Automation." },
     { q: "How do Meta Ads help my business get leads?", a: "Meta Ads allow us to target your exact ideal customer based on interests, demographics, and online behavior. We direct them to a high-converting landing page or lead form to collect pre-qualified inquiries." },
@@ -378,12 +826,8 @@ export default function App() {
     { q: "How soon can we launch a marketing campaign?", a: "Typically within 3 to 5 days! This includes audience research, ad creative prep, landing page setup, tracking verification, and campaign launch." }
   ];
 
-  const filteredProjects = activeProjectFilter === 'All' 
-    ? projectsData 
-    : projectsData.filter(p => p.category === activeProjectFilter);
-
   return (
-    <div className="min-h-screen relative selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-black">
+    <div className="min-h-screen relative selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-black flex flex-col justify-between">
       
       {/* CUSTOM DESKTOP CURSOR */}
       <div 
@@ -395,12 +839,12 @@ export default function App() {
         style={{ left: `${cursorPos.x}px`, top: `${cursorPos.y}px` }}
       />
 
-      {/* STICKY HEADER NAV */}
+      {/* STICKY HEADER NAV (PUBLIC TOOLBAR - NO ADMIN LINK, REPLACED CAMPAIGN WITH PORTFOLIO) */}
       <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[var(--header-bg)] border-b border-[var(--border-color)] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
           
           {/* Logo */}
-          <a href="#" className="flex items-center gap-3 group">
+          <button onClick={() => navigateTo('home')} className="flex items-center gap-3 group text-left cursor-pointer">
             <img 
               src="/LOGO.png" 
               alt="Shahid Khan Logo" 
@@ -410,21 +854,39 @@ export default function App() {
               <span className="font-heading font-bold text-base sm:text-lg tracking-tight text-[var(--text-primary)]">Shahid Khan</span>
               <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-[var(--text-muted)]">Digital Marketing & Growth Specialist</span>
             </div>
-          </a>
+          </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-[var(--text-secondary)]">
-            <a href="#about" className="hover:text-[var(--text-primary)] transition-colors">About</a>
-            <a href="#skills" className="hover:text-[var(--text-primary)] transition-colors">Skills</a>
-            <a href="#services" className="hover:text-[var(--text-primary)] transition-colors">Services</a>
-            <a href="#projects" className="hover:text-[var(--text-primary)] transition-colors">Campaigns</a>
-            <a href="#process" className="hover:text-[var(--text-primary)] transition-colors">Process</a>
-            <a href="#faq" className="hover:text-[var(--text-primary)] transition-colors">FAQ</a>
-            <a href="#contact" className="hover:text-[var(--text-primary)] transition-colors">Contact</a>
+          {/* Desktop Navigation (Replaced Campaign with Portfolio, Skills merged in About, Removed Process/FAQ) */}
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-[var(--text-secondary)]">
+            {[
+              { id: 'home', label: 'Home', path: '/' },
+              { id: 'about', label: 'About & Skills', path: '/about' },
+              { id: 'services', label: 'Services', path: '/services' },
+              { id: 'projects', label: 'Portfolio', path: '/portfolio' },
+              { id: 'contact', label: 'Contact', path: '/contact' }
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => navigateTo(item.id)}
+                className={`py-1 transition-colors cursor-pointer relative ${
+                  activePage === item.id 
+                    ? 'text-[var(--text-primary)] font-bold' 
+                    : 'hover:text-[var(--text-primary)]'
+                }`}
+              >
+                {item.label}
+                {activePage === item.id && (
+                  <motion.div 
+                    layoutId="activeTabIndicator"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--text-primary)] rounded-full" 
+                  />
+                )}
+              </button>
+            ))}
           </nav>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button 
               onClick={toggleTheme}
               aria-label="Toggle Theme"
@@ -436,7 +898,7 @@ export default function App() {
             <a 
               href="/Shahid_Khan_CV.pdf" 
               download 
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--border-dark)] bg-transparent text-xs font-bold font-heading uppercase tracking-wider text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 shadow-sm"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-dark)] bg-transparent text-xs font-bold font-heading uppercase tracking-wider text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 shadow-sm"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download CV</span>
@@ -445,7 +907,7 @@ export default function App() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2.5 rounded-lg border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+              className="lg:hidden p-2.5 rounded-lg border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer"
               aria-label="Toggle Mobile Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -461,16 +923,14 @@ export default function App() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden border-b border-[var(--border-color)] bg-[var(--bg-card)] px-6 py-6 space-y-4"
+              className="lg:hidden border-b border-[var(--border-color)] bg-[var(--bg-card)] px-6 py-5 space-y-3"
             >
-              <nav className="flex flex-col space-y-3 font-heading font-medium text-base">
-                <a href="#about" onClick={() => setMobileMenuOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1">About Me</a>
-                <a href="#skills" onClick={() => setMobileMenuOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1">Marketing Skills</a>
-                <a href="#services" onClick={() => setMobileMenuOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1">Marketing Services</a>
-                <a href="#projects" onClick={() => setMobileMenuOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1">Featured Campaigns</a>
-                <a href="#process" onClick={() => setMobileMenuOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1">Campaign Process</a>
-                <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1">FAQ</a>
-                <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1">Contact Me</a>
+              <nav className="flex flex-col space-y-2 font-heading font-medium text-sm">
+                <button onClick={() => navigateTo('home')} className={`text-left py-1.5 ${activePage === 'home' ? 'font-bold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>Home</button>
+                <button onClick={() => navigateTo('about')} className={`text-left py-1.5 ${activePage === 'about' ? 'font-bold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>About & Skills</button>
+                <button onClick={() => navigateTo('services')} className={`text-left py-1.5 ${activePage === 'services' ? 'font-bold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>Services</button>
+                <button onClick={() => navigateTo('projects')} className={`text-left py-1.5 ${activePage === 'projects' ? 'font-bold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>Portfolio</button>
+                <button onClick={() => navigateTo('contact')} className={`text-left py-1.5 ${activePage === 'contact' ? 'font-bold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>Contact</button>
               </nav>
               <div className="pt-2">
                 <a 
@@ -478,7 +938,7 @@ export default function App() {
                   download 
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold tracking-wider uppercase"
                 >
-                  <Download className="w-4 h-4" /> Download Marketing Resume PDF
+                  <Download className="w-4 h-4" /> Download Resume PDF
                 </a>
               </div>
             </motion.div>
@@ -487,802 +947,1656 @@ export default function App() {
       </header>
 
 
-      {/* HERO SECTION (COMPACT HEIGHT & PADDING) */}
-      <section className="relative pt-8 pb-14 md:pt-14 md:pb-16 max-w-7xl mx-auto px-6">
-        
-        {/* Availability Badge */}
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-secondary)] mb-6 shadow-sm"
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Available for Paid Ad Campaigns & Growth Projects</span>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
+      {/* MAIN DYNAMIC CONTENT CONTAINER */}
+      <main className="flex-1">
+        <AnimatePresence mode="wait">
           
-          {/* Hero Left Column (Marketing Content) */}
-          <div className="lg:col-span-7 space-y-5">
-            
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
+          {/* ==================== 1. DETAILED COMPREHENSIVE HOME PAGE (/) ==================== */}
+          {activePage === 'home' && (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] leading-[1.15]"
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
             >
-              Scale Your Business with <span className="underline underline-offset-6 decoration-[var(--border-color)]">High-ROAS Digital Marketing</span> & Performance Ads.
-            </motion.h1>
+              {/* HERO SECTION */}
+              <section className="relative pt-4 sm:pt-6 pb-10 md:pb-12 max-w-7xl mx-auto px-6">
+                
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-secondary)] mb-4 sm:mb-6 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Available for Paid Ad Campaigns & Growth Projects</span>
+                </div>
 
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed max-w-2xl"
-            >
-              I help businesses, agencies, NGOs, and retail brands generate high-intent leads, lower customer acquisition costs, and scale revenue through Meta Ads, Google Search & PMax, and high-converting paid funnels.
-            </motion.p>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+                  
+                  {/* Hero Content Left */}
+                  <div className="lg:col-span-7 space-y-4 sm:space-y-5">
+                    
+                    <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] leading-[1.15]">
+                      Scale Your Business with <span className="underline underline-offset-6 decoration-[var(--border-color)]">High-ROAS Digital Marketing</span> & Performance Ads.
+                    </h1>
 
-            {/* CTAs */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap items-center gap-4 pt-1"
-            >
-              <a 
-                href="#contact" 
-                className="px-6 py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-md cursor-pointer"
-              >
-                <span>Get More Leads & Sales</span>
-                <ArrowUpRight className="w-4 h-4" />
-              </a>
+                    <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+                      I help businesses, agencies, NGOs, and retail brands generate high-intent leads, lower customer acquisition costs, and scale revenue through Meta Ads, Google Search & PMax, and high-converting paid funnels.
+                    </p>
 
-              <a 
-                href="#projects" 
-                className="px-6 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
-              >
-                <span>Explore Marketing Work</span>
-                <ArrowDown className="w-4 h-4" />
-              </a>
-            </motion.div>
+                    {/* Primary CTAs */}
+                    <div className="flex flex-wrap items-center gap-4 pt-1">
+                      <button 
+                        onClick={() => navigateTo('contact')}
+                        className="px-6 py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-md cursor-pointer"
+                      >
+                        <span>Get More Leads & Sales</span>
+                        <ArrowUpRight className="w-4 h-4" />
+                      </button>
 
-            {/* Hero Marketing Quick Badges */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="pt-4 flex flex-wrap gap-5 text-xs text-[var(--text-muted)] font-medium border-t border-[var(--border-color)] mt-6"
-            >
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)]" />
-                <span>Meta & Google Certified Ads</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)]" />
-                <span>High ROAS Paid Campaigns</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)]" />
-                <span>Lead Gen & Funnel Optimization</span>
-              </div>
-            </motion.div>
+                      <button 
+                        onClick={() => navigateTo('home', 'home-portfolio')}
+                        className="px-6 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
+                      >
+                        <span>Explore Portfolio Work</span>
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                    </div>
 
-          </div>
-
-          {/* Hero Right Column (3D TILT & SMOOTH DOWNWARD TRAVEL PROFILE PHOTO) */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end perspective-1000 lg:-mt-12">
-            <motion.div 
-              style={{ 
-                scale: photoScale, 
-                y: photoY, 
-                rotateY: photoRotateY, 
-                rotateZ: photoRotateZ
-              }}
-              transition={{ type: "spring", stiffness: 200, damping: 22 }}
-              className="w-full max-w-[320px] sm:max-w-[350px] lg:max-w-[360px] z-20"
-            >
-              <HeroPhoto3D className="w-full">
-                <div className="rounded-3xl overflow-hidden shadow-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2">
-                  <div className="rounded-2xl overflow-hidden relative">
-                    <img 
-                      src="/shahid_photo.png" 
-                      onError={(e) => { e.currentTarget.src = heroPhoto; }}
-                      alt="Shahid Khan — Digital Marketing Specialist" 
-                      className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-500 transform group-hover:scale-102"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
-                    <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl backdrop-blur-md bg-black/60 border border-white/10 text-white flex items-center justify-between">
-                      <div>
-                        <p className="font-heading font-bold text-xs sm:text-sm">Shahid Khan</p>
-                        <p className="text-[11px] text-neutral-300">Digital Marketer & Growth Strategist</p>
+                    {/* Quick Badges */}
+                    <div className="pt-4 flex flex-wrap gap-5 text-xs text-[var(--text-muted)] font-medium border-t border-[var(--border-color)] mt-4 sm:mt-5">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)]" />
+                        <span>Meta & Google Certified Ads</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded bg-white/20 text-[9px] font-mono uppercase font-bold tracking-wider">
-                        META & GOOGLE ADS
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)]" />
+                        <span>High ROAS Paid Campaigns</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)]" />
+                        <span>Lead Gen & Funnel Optimization</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Hero 3D Photo Right */}
+                  <div className="lg:col-span-5 flex justify-center lg:justify-end perspective-1000 lg:-mt-8">
+                    <motion.div 
+                      style={{ 
+                        scale: photoScale, 
+                        y: photoY, 
+                        rotateY: photoRotateY, 
+                        rotateZ: photoRotateZ
+                      }}
+                      transition={{ type: "spring", stiffness: 200, damping: 22 }}
+                      className="w-full max-w-sm lg:max-w-md z-20"
+                    >
+                      <HeroPhoto3D className="w-full">
+                        <div className="rounded-3xl overflow-hidden shadow-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2">
+                          <div className="rounded-2xl overflow-hidden relative">
+                            <img 
+                              src="/shahid_photo.png" 
+                              onError={(e) => { e.currentTarget.src = heroPhoto; }}
+                              alt="Shahid Khan — Digital Marketing Specialist" 
+                              className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-500 transform group-hover:scale-102"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
+                            <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl backdrop-blur-md bg-black/60 border border-white/10 text-white flex items-center justify-between">
+                              <div>
+                                <p className="font-heading font-bold text-xs sm:text-sm">Shahid Khan</p>
+                                <p className="text-[11px] text-neutral-300">Digital Marketer & Growth Strategist</p>
+                              </div>
+                              <span className="px-2 py-0.5 rounded bg-white/20 text-[9px] font-mono uppercase font-bold tracking-wider">
+                                META & GOOGLE ADS
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </HeroPhoto3D>
+                    </motion.div>
+                  </div>
+
+                </div>
+
+                {/* ANIMATED STATISTICS SECTION (DYNAMICALLY EDITABLE) */}
+                <div className="mt-8 sm:mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {siteStats.map((stat, idx) => (
+                    <div key={idx} className="p-5 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all shadow-sm">
+                      <h3 className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
+                        <AnimatedCounter target={stat.target} suffix={stat.suffix} />
+                      </h3>
+                      <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+              </section>
+
+              {/* ABOUT SUMMARY ON HOME PAGE */}
+              <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <div className="max-w-7xl mx-auto px-6">
+                  <div className="max-w-3xl mb-8">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">About Me</span>
+                    <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mt-1">Who I Am</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div className="lg:col-span-7 space-y-4 text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">
+                      <p className="font-medium text-base text-[var(--text-primary)]">
+                        I am <strong className="font-bold">Shahid Khan</strong>, a Performance Digital Marketer and Growth Strategist with extensive experience helping local retail businesses, agencies, non-profits, and startups build profitable digital advertising systems.
+                      </p>
+                      <p>
+                        My expertise centers on <strong className="text-[var(--text-primary)]">Meta Ads (Facebook & Instagram), Google Ads (Search & Performance Max), B2B/B2C lead generation, audience research, paid funnel architecture, and conversion rate optimization (CRO)</strong>.
+                      </p>
+                    </div>
+
+                    <div className="lg:col-span-5 grid grid-cols-1 gap-3">
+                      <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3">
+                        <Target className="w-5 h-5 text-[var(--text-primary)] shrink-0" />
+                        <div>
+                          <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Meta & Google Ads Expert</p>
+                          <p className="text-[11px] text-[var(--text-muted)]">Laser-targeted audience reach & high ROAS</p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3">
+                        <TrendingUp className="w-5 h-5 text-[var(--text-primary)] shrink-0" />
+                        <div>
+                          <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Lead Generation Architecture</p>
+                          <p className="text-[11px] text-[var(--text-muted)]">High-converting landing pages & sales funnels</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </HeroPhoto3D>
-            </motion.div>
-          </div>
+              </section>
 
-        </div>
-
-        {/* ANIMATED MARKETING STATISTICS SECTION */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4"
-        >
-          {[
-            { label: "Leads Generated", target: 1000, suffix: "+" },
-            { label: "Campaigns Managed", target: 50, suffix: "+" },
-            { label: "Brands Scaled", target: 5, suffix: "+" },
-            { label: "High ROAS Funnels", target: 20, suffix: "+" }
-          ].map((stat, idx) => (
-            <div key={idx} className="p-5 rounded-2xl glass-card border border-[var(--border-color)] text-center space-y-1 hover:border-[var(--text-primary)] transition-all shadow-sm">
-              <h3 className="font-display font-extrabold text-2xl sm:text-3xl text-[var(--text-primary)]">
-                <AnimatedCounter target={stat.target} suffix={stat.suffix} />
-              </h3>
-              <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">{stat.label}</p>
-            </div>
-          ))}
-        </motion.div>
-
-      </section>
-
-
-      {/* ABOUT ME SECTION (REDUCED PADDING py-14) */}
-      <section id="about" className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="max-w-3xl mb-10">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">About Me</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mt-1">Who I Am</h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            
-            <div className="lg:col-span-7 space-y-5 text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">
-              <p className="font-medium text-base text-[var(--text-primary)]">
-                I am <strong className="font-bold">Shahid Khan</strong>, a Performance Digital Marketer and Growth Strategist with extensive experience helping local retail businesses, agencies, non-profits, and startups build profitable digital advertising systems.
-              </p>
-
-              <p>
-                My expertise centers on <strong className="text-[var(--text-primary)]">Meta Ads (Facebook & Instagram), Google Ads (Search & Performance Max), B2B/B2C lead generation, audience research, paid funnel architecture, and conversion rate optimization (CRO)</strong>. I equip campaigns with Meta Pixel CAPI, Google Analytics 4 tracking, and high-converting landing pages built to maximize ROAS.
-              </p>
-
-              <p>
-                By combining persuasive marketing copywriting with AI automation (ChatGPT, Claude, n8n) and web technology, I deliver complete end-to-end client acquisition funnels that turn paid traffic into revenue.
-              </p>
-
-              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
-                  <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Location</p>
-                  <p className="text-xs text-[var(--text-muted)]">Jaipur, Rajasthan, India (Available Globally)</p>
-                </div>
-
-                <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
-                  <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Primary Focus</p>
-                  <p className="text-xs text-[var(--text-muted)]">Meta & Google Paid Ads + Lead Gen Funnels</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Highlights Cards */}
-            <div className="lg:col-span-5 grid grid-cols-1 gap-4">
-              
-              <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
-                  <Target className="w-4 h-4" />
-                </div>
-                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">Meta & Google Paid Advertising</h3>
-                <p className="text-xs text-[var(--text-secondary)]">Strategic audience targeting, creative ad design, A/B testing, and budget scaling focused on maximum Return on Ad Spend (ROAS).</p>
-              </div>
-
-              <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">Lead Generation & Sales Funnels</h3>
-                <p className="text-xs text-[var(--text-secondary)]">Engineered landing pages and lead capture systems built to convert cold paid traffic into pre-qualified sales calls and inquiries.</p>
-              </div>
-
-              <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
-                  <BarChart3 className="w-4 h-4" />
-                </div>
-                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">Meta Pixel & Analytics Setup</h3>
-                <p className="text-xs text-[var(--text-secondary)]">Complete conversion tracking via Meta Pixel, CAPI, and GA4 to ensure every dollar of ad spend is measured and optimized.</p>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* SKILLS SECTION (REDUCED PADDING py-14) */}
-      <section id="skills" className="py-14 border-t border-[var(--border-color)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Capabilities</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Digital Marketing Skills</h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">A specialized performance marketing toolkit engineered for lead acquisition, ad optimization, and business scaling.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {skillsCategories.map((cat, idx) => (
-              <div key={idx} className="p-7 rounded-3xl glass-card border border-[var(--border-color)] hover:border-[var(--text-primary)] transition-all shadow-sm">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    {cat.icon}
+              {/* SKILLS & TOOLS GRID ON HOME PAGE */}
+              <section className="py-14 border-t border-[var(--border-color)]">
+                <div className="max-w-7xl mx-auto px-6 space-y-10">
+                  <div className="text-center max-w-2xl mx-auto space-y-1.5">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Toolkit</span>
+                    <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing Skills & Tech Stack</h2>
                   </div>
-                  <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">{cat.title}</h3>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+                    {toolsData.map((tool) => (
+                      <div key={tool.id} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] hover:-translate-y-0.5 transition-all cursor-pointer group shadow-sm flex flex-col justify-between h-full">
+                        <div>
+                          <span className="text-[9px] font-mono uppercase font-bold tracking-wider text-[var(--text-muted)] block mb-1">
+                            {tool.category}
+                          </span>
+                          <h4 className="font-heading font-bold text-sm text-[var(--text-primary)] group-hover:underline">
+                            {tool.name}
+                          </h4>
+                        </div>
+                        <p className="text-[10px] text-[var(--text-secondary)] mt-2 leading-tight">
+                          {tool.desc}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* FULL PORTFOLIO / CAMPAIGN SHOWCASE ON HOME PAGE */}
+              <section id="home-portfolio" className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <div className="max-w-7xl mx-auto px-6">
+                  <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-5">
+                    <div>
+                      <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Client Success</span>
+                      <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mt-1">Featured Client Portfolio</h2>
+                      <p className="text-xs text-[var(--text-secondary)] mt-1">Click on any project heading to view full case study details & strategy breakdown.</p>
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className="flex flex-wrap gap-2">
+                      {['All', 'Paid Advertising & Lead Gen', 'NGO Marketing & Growth', 'Agency Marketing & Funnels'].map((filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => setActiveProjectFilter(filter)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer ${
+                            activeProjectFilter === filter 
+                              ? 'bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-md' 
+                              : 'border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                          }`}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Projects Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <AnimatePresence mode="popLayout">
+                      {filteredProjects.map((project) => (
+                        <motion.div
+                          key={project.id}
+                          layout
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 flex flex-col justify-between h-full hover:border-[var(--text-primary)] transition-all duration-300 group shadow-sm"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
+                                {project.location}
+                              </span>
+                              {project.website && (
+                                <span className="text-[11px] font-mono text-[var(--text-muted)] flex items-center gap-1">
+                                  <Globe className="w-3 h-3" /> {project.website}
+                                </span>
+                              )}
+                            </div>
+
+                            <button 
+                              onClick={() => setSelectedProjectModal(project)}
+                              className="w-full text-left font-heading font-bold text-lg text-[var(--text-primary)] mb-2 hover:underline flex items-center justify-between group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors cursor-pointer"
+                              title="Click to view detailed case study"
+                            >
+                              <span>{project.title}</span>
+                              <FileText className="w-4 h-4 opacity-50 group-hover:opacity-100 shrink-0" />
+                            </button>
+
+                            <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-5">
+                              {project.description}
+                            </p>
+                          </div>
+
+                          <div>
+                            <div className="flex flex-wrap gap-1.5 mb-5 pt-3 border-t border-[var(--border-color)]">
+                              {project.services && project.services.map((srv, idx) => (
+                                <span key={idx} className="px-2 py-0.5 rounded-md bg-[var(--bg-primary)] text-[10px] font-medium text-[var(--text-secondary)]">
+                                  {srv}
+                                </span>
+                              ))}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <button 
+                                onClick={() => setSelectedProjectModal(project)}
+                                className="py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all flex items-center justify-center gap-1 cursor-pointer"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                <span>Read Details</span>
+                              </button>
+
+                              {project.link ? (
+                                <a 
+                                  href={project.link} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold hover:opacity-90 transition-all flex items-center justify-center gap-1 uppercase tracking-wider"
+                                >
+                                  <span>Live Site</span>
+                                  <ArrowUpRight className="w-3.5 h-3.5" />
+                                </a>
+                              ) : (
+                                <div className="py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[10px] font-heading font-semibold text-[var(--text-muted)] text-center flex items-center justify-center">
+                                  Lead Campaign
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </section>
+
+              {/* DIGITAL MARKETING SERVICES ON HOME PAGE */}
+              <section className="py-14 border-t border-[var(--border-color)]">
+                <div className="max-w-7xl mx-auto px-6">
+                  <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Services</span>
+                    <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Digital Marketing Services</h2>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)]">Data-driven paid advertising, lead capture funnels, and marketing analytics designed to grow your revenue.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {servicesData.map((srv, idx) => (
+                      <div key={srv.id || idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-sm flex flex-col justify-between h-full">
+                        <div>
+                          <div className="w-7 h-7 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center font-heading font-bold text-[11px] mb-3">
+                            {(idx + 1).toString().padStart(2, '0')}
+                          </div>
+                          <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)] mb-1.5">
+                            {srv.name}
+                          </h3>
+                          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                            {srv.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* 6-STEP CAMPAIGN PROCESS (RETAINED ON HOME SCREEN ONLY) */}
+              <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <div className="max-w-7xl mx-auto px-6">
+                  <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Workflow</span>
+                    <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Campaign Process</h2>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)]">A battle-tested 6-step framework for launching profitable digital advertising campaigns.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {processSteps.map((p, idx) => (
+                      <div key={idx} className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] relative hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
+                        <span className="font-display font-extrabold text-4xl text-[var(--border-color)] block mb-3">
+                          {p.step}
+                        </span>
+                        <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-1.5">
+                          {p.title}
+                        </h3>
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                          {p.desc}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* FAQ ACCORDION (RETAINED ON HOME SCREEN ONLY) */}
+              <section className="py-14 border-t border-[var(--border-color)]">
+                <div className="max-w-4xl mx-auto px-6">
+                  <div className="text-center mb-12 space-y-1.5">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Questions</span>
+                    <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing FAQ</h2>
+                  </div>
+
+                  <div className="space-y-3">
+                    {faqItems.map((item, idx) => {
+                      const isOpen = openFaq === idx;
+                      return (
+                        <div 
+                          key={idx}
+                          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] overflow-hidden transition-colors"
+                        >
+                          <button
+                            onClick={() => setOpenFaq(isOpen ? null : idx)}
+                            className="w-full px-5 py-4 text-left font-heading font-bold text-sm sm:text-base text-[var(--text-primary)] flex items-center justify-between gap-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                          >
+                            <span>{item.q}</span>
+                            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          
+                          <AnimatePresence>
+                            {isOpen && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="px-5 pb-5 text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--border-color)] pt-3"
+                              >
+                                {item.a}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
+
+              {/* CONTACT FORM & DETAILS ON HOME PAGE */}
+              <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <div className="max-w-7xl mx-auto px-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                    
+                    {/* Contact Info Left */}
+                    <div className="lg:col-span-5 space-y-6">
+                      <div>
+                        <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Start Scaling</span>
+                        <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mt-1 leading-tight">
+                          Grow Your Business Today
+                        </h2>
+                        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-3 leading-relaxed">
+                          Ready to launch high-ROAS Meta/Google ads, capture qualified leads, or build a conversion-focused landing page? Let's discuss your marketing strategy.
+                        </p>
+                      </div>
+
+                      <div className="space-y-3.5 font-medium text-xs sm:text-sm">
+                        <a href="mailto:contact@shahidkhan.site" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
+                          <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                            <Mail className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-[var(--text-muted)]">Direct Email</p>
+                            <p className="font-heading font-bold text-[var(--text-primary)]">contact@shahidkhan.site</p>
+                          </div>
+                        </a>
+
+                        <a href="tel:+919587867559" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
+                          <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                            <Phone className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-[var(--text-muted)]">Phone / WhatsApp</p>
+                            <p className="font-heading font-bold text-[var(--text-primary)]">+91 95878 67559</p>
+                          </div>
+                        </a>
+
+                        <div className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5">
+                          <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-[var(--text-muted)]">Location</p>
+                            <p className="font-heading font-bold text-[var(--text-primary)]">Jaipur, Rajasthan, India</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Form Right */}
+                    <div className="lg:col-span-7">
+                      <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
+                        <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)] mb-5">Book a Strategy Session</h3>
+
+                        <form onSubmit={handleContactSubmit} className="space-y-3.5">
+                          {formSubmitted && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
+                            >
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              <span>Thank you! Your submission has been saved and a confirmation email was triggered via Resend (noreply@shahidkhan.site).</span>
+                            </motion.div>
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Name *</label>
+                              <input 
+                                type="text" 
+                                name="name" 
+                                required 
+                                placeholder="Shahid Khan" 
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
+                              <input 
+                                type="email" 
+                                name="email" 
+                                required 
+                                placeholder="you@example.com" 
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Phone / WhatsApp *</label>
+                              <input 
+                                type="tel" 
+                                name="phone" 
+                                required
+                                placeholder="+91 98765 43210" 
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Business Name</label>
+                              <input 
+                                type="text" 
+                                name="businessName" 
+                                placeholder="Company or Brand Name" 
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Marketing Service *</label>
+                              <select 
+                                name="serviceRequired"
+                                required
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                              >
+                                <option value="">Select Primary Goal...</option>
+                                <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
+                                <option value="Google Ads (Search & PMax)">Google Ads (Search & PMax)</option>
+                                <option value="Lead Generation & Sales Funnels">Lead Generation & Sales Funnels</option>
+                                <option value="High-Converting Landing Page">High-Converting Landing Page</option>
+                                <option value="Meta Pixel & GA4 Setup">Meta Pixel & GA4 Setup</option>
+                                <option value="NGO Campaign & Payment Portal">NGO Campaign & Payment Portal</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget</label>
+                              <select 
+                                name="budget"
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                              >
+                                <option value="Flexible">Flexible / Discuss Strategy</option>
+                                <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
+                                <option value="₹30,000 - ₹75,000">₹30,000 - ₹75,000 / month</option>
+                                <option value="₹75,000+">₹75,000+ / month</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Project Details *</label>
+                            <textarea 
+                              rows={3} 
+                              name="message" 
+                              required 
+                              placeholder="Tell me about your product, current ad campaigns, or lead generation goals..." 
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                            ></textarea>
+                          </div>
+
+                          <button 
+                            type="submit" 
+                            disabled={submitting}
+                            className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                          >
+                            <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
+                          </button>
+
+                        </form>
+
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </section>
+
+            </motion.div>
+          )}
+
+
+          {/* ==================== 2. SEPARATE ABOUT & SKILLS PAGE (/about) ==================== */}
+          {activePage === 'about' && (
+            <motion.div
+              key="about"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="py-14"
+            >
+              <div className="max-w-7xl mx-auto px-6 space-y-12">
+                
+                {/* Header */}
+                <div className="space-y-2 border-b border-[var(--border-color)] pb-6">
+                  <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-muted)]">
+                    <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">Home</button>
+                    <span>/</span>
+                    <span className="text-[var(--text-primary)] font-bold">About & Skills</span>
+                  </div>
+                  <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Who I Am & Marketing Skills</h1>
+                  <p className="text-sm text-[var(--text-secondary)]">Digital Marketer, AI Website Creator & Performance Growth Strategist.</p>
                 </div>
 
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                  <div className="lg:col-span-7 space-y-5 text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">
+                    <p className="font-medium text-base text-[var(--text-primary)]">
+                      I am <strong className="font-bold">Shahid Khan</strong>, a Performance Digital Marketer and Growth Strategist based in Jaipur, Rajasthan, India.
+                    </p>
+
+                    <p>
+                      I specialize in building complete digital acquisition systems for local retail stores, service agencies, non-profits, and growing brands. My approach combines <strong className="text-[var(--text-primary)]">Meta Paid Advertising (FB & IG), Google Search & Performance Max, audience targeting, landing page design, and conversion tracking</strong>.
+                    </p>
+
+                    <p>
+                      By pairing persuasive copywriting with AI automation (ChatGPT, Claude, n8n) and modern web technology, I help businesses generate pre-qualified leads while reducing customer acquisition costs.
+                    </p>
+
+                    <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)]">
+                        <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Location</p>
+                        <p className="text-xs text-[var(--text-muted)]">Jaipur, Rajasthan, India (Available Globally)</p>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)]">
+                        <p className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">Primary Specialization</p>
+                        <p className="text-xs text-[var(--text-muted)]">Meta & Google Paid Ads + Lead Gen Funnels</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-5 space-y-4">
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 shadow-sm">
+                      <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
+                        <Target className="w-4 h-4" />
+                      </div>
+                      <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Meta & Google Paid Advertising</h3>
+                      <p className="text-xs text-[var(--text-secondary)]">Strategic audience targeting, creative ad design, A/B testing, and budget scaling focused on maximum ROAS.</p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 shadow-sm">
+                      <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2">
+                        <TrendingUp className="w-4 h-4" />
+                      </div>
+                      <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Lead Generation & Sales Funnels</h3>
+                      <p className="text-xs text-[var(--text-secondary)]">Engineered landing pages and lead capture systems built to convert cold paid traffic into pre-qualified sales calls.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SKILLS & 17 TOOLS MERGED INSIDE ABOUT PAGE */}
+                <div className="space-y-8 pt-8 border-t border-[var(--border-color)]">
+                  <div className="space-y-1">
+                    <h2 className="font-heading font-bold text-2xl text-[var(--text-primary)]">Marketing Capabilities</h2>
+                    <p className="text-xs text-[var(--text-secondary)]">Core advertising, conversion, and tracking skillsets.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {skillsCategories.map((cat, idx) => (
+                      <div key={idx} className="p-7 rounded-3xl glass-card border border-[var(--border-color)] shadow-sm">
+                        <div className="flex items-center gap-3 mb-5">
+                          <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                            {cat.icon}
+                          </div>
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">{cat.title}</h3>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {cat.skills.map((skill, sIdx) => (
+                            <span 
+                              key={sIdx}
+                              className="px-3 py-1.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5"
+                            >
+                              <Check className="w-3 h-3 text-emerald-500" />
+                              <span>{skill}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 17 Tools Grid */}
+                  <div className="space-y-4 pt-6">
+                    <h3 className="font-heading font-bold text-xl text-[var(--text-primary)]">17 Marketing Tools & Platforms</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+                      {toolsData.map((tool) => (
+                        <div key={tool.id} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-sm flex flex-col justify-between h-full">
+                          <div>
+                            <span className="text-[9px] font-mono uppercase font-bold tracking-wider text-[var(--text-muted)] block mb-1">
+                              {tool.category}
+                            </span>
+                            <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">
+                              {tool.name}
+                            </h4>
+                          </div>
+                          <p className="text-[10px] text-[var(--text-secondary)] mt-2 leading-tight">
+                            {tool.desc}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-[var(--border-color)] flex justify-between items-center">
+                  <button onClick={() => navigateTo('home')} className="text-xs font-heading font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 cursor-pointer">
+                    <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                  </button>
+                  <button onClick={() => navigateTo('services')} className="text-xs font-heading font-bold text-[var(--text-primary)] flex items-center gap-1 cursor-pointer hover:underline">
+                    View Marketing Services <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+
+
+          {/* ==================== 3. SEPARATE SERVICES PAGE (/services) ==================== */}
+          {activePage === 'services' && (
+            <motion.div
+              key="services"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="py-14"
+            >
+              <div className="max-w-7xl mx-auto px-6 space-y-12">
+                
+                {/* Header */}
+                <div className="space-y-2 border-b border-[var(--border-color)] pb-6">
+                  <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-muted)]">
+                    <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">Home</button>
+                    <span>/</span>
+                    <span className="text-[var(--text-primary)] font-bold">Services</span>
+                  </div>
+                  <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Digital Marketing Services</h1>
+                  <p className="text-sm text-[var(--text-secondary)]">Data-driven advertising, sales funnels, and marketing analytics engineered to grow your revenue.</p>
+                </div>
+
+                {/* 14 Services Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {servicesData.map((srv, idx) => (
+                    <div key={srv.id || idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-sm flex flex-col justify-between h-full">
+                      <div>
+                        <div className="w-7 h-7 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center font-heading font-bold text-[11px] mb-3">
+                          {(idx + 1).toString().padStart(2, '0')}
+                        </div>
+                        <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)] mb-1.5">
+                          {srv.name}
+                        </h3>
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                          {srv.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-6 border-t border-[var(--border-color)] flex justify-between items-center">
+                  <button onClick={() => navigateTo('about')} className="text-xs font-heading font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 cursor-pointer">
+                    <ArrowLeft className="w-3.5 h-3.5" /> Back to About
+                  </button>
+                  <button onClick={() => navigateTo('projects')} className="text-xs font-heading font-bold text-[var(--text-primary)] flex items-center gap-1 cursor-pointer hover:underline">
+                    View Portfolio <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+
+
+          {/* ==================== 4. SEPARATE PORTFOLIO PAGE (/portfolio) ==================== */}
+          {activePage === 'projects' && (
+            <motion.div
+              key="projects"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="py-14"
+            >
+              <div className="max-w-7xl mx-auto px-6 space-y-10">
+                
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 border-b border-[var(--border-color)] pb-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-muted)]">
+                      <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">Home</button>
+                      <span>/</span>
+                      <span className="text-[var(--text-primary)] font-bold">Portfolio</span>
+                    </div>
+                    <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Client Portfolio & Campaigns</h1>
+                    <p className="text-sm text-[var(--text-secondary)]">Click on any project heading to view detailed strategy case studies & measurable results.</p>
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="flex flex-wrap gap-2">
+                    {['All', 'Paid Advertising & Lead Gen', 'NGO Marketing & Growth', 'Agency Marketing & Funnels'].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setActiveProjectFilter(filter)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer ${
+                          activeProjectFilter === filter 
+                            ? 'bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-md' 
+                            : 'border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                        }`}
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Projects Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <AnimatePresence mode="popLayout">
+                    {filteredProjects.map((project) => (
+                      <motion.div
+                        key={project.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 flex flex-col justify-between h-full hover:border-[var(--text-primary)] transition-all duration-300 group shadow-sm"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
+                              {project.location}
+                            </span>
+                            {project.website && (
+                              <span className="text-[11px] font-mono text-[var(--text-muted)] flex items-center gap-1">
+                                <Globe className="w-3 h-3" /> {project.website}
+                              </span>
+                            )}
+                          </div>
+
+                          <button 
+                            onClick={() => setSelectedProjectModal(project)}
+                            className="w-full text-left font-heading font-bold text-lg text-[var(--text-primary)] mb-2 hover:underline flex items-center justify-between group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors cursor-pointer"
+                          >
+                            <span>{project.title}</span>
+                            <FileText className="w-4 h-4 opacity-50 group-hover:opacity-100 shrink-0" />
+                          </button>
+
+                          <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-5">
+                            {project.description}
+                          </p>
+                        </div>
+
+                        <div>
+                          <div className="flex flex-wrap gap-1.5 mb-5 pt-3 border-t border-[var(--border-color)]">
+                            {project.services && project.services.map((srv, idx) => (
+                              <span key={idx} className="px-2 py-0.5 rounded-md bg-[var(--bg-primary)] text-[10px] font-medium text-[var(--text-secondary)]">
+                                {srv}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <button 
+                              onClick={() => setSelectedProjectModal(project)}
+                              className="py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Read Details</span>
+                            </button>
+
+                            {project.link ? (
+                              <a 
+                                href={project.link} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold hover:opacity-90 transition-all flex items-center justify-center gap-1 uppercase tracking-wider"
+                              >
+                                <span>Live Site</span>
+                                <ArrowUpRight className="w-3.5 h-3.5" />
+                              </a>
+                            ) : (
+                              <div className="py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[10px] font-heading font-semibold text-[var(--text-muted)] text-center flex items-center justify-center">
+                                Lead Campaign
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                <div className="pt-6 border-t border-[var(--border-color)] flex justify-between items-center">
+                  <button onClick={() => navigateTo('services')} className="text-xs font-heading font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 cursor-pointer">
+                    <ArrowLeft className="w-3.5 h-3.5" /> Back to Services
+                  </button>
+                  <button onClick={() => navigateTo('contact')} className="text-xs font-heading font-bold text-[var(--text-primary)] flex items-center gap-1 cursor-pointer hover:underline">
+                    Contact Me <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+
+
+          {/* ==================== 5. SEPARATE CONTACT PAGE (/contact) ==================== */}
+          {activePage === 'contact' && (
+            <motion.div
+              key="contact"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="py-14"
+            >
+              <div className="max-w-7xl mx-auto px-6 space-y-10">
+                
+                {/* Header */}
+                <div className="space-y-2 border-b border-[var(--border-color)] pb-6">
+                  <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-muted)]">
+                    <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">Home</button>
+                    <span>/</span>
+                    <span className="text-[var(--text-primary)] font-bold">Contact</span>
+                  </div>
+                  <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Book a Strategy Session</h1>
+                  <p className="text-sm text-[var(--text-secondary)]">Discuss your paid ad campaigns, lead generation goals, or custom landing page.</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                  
+                  {/* Contact Info Left */}
+                  <div className="lg:col-span-5 space-y-6">
+                    <div>
+                      <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] leading-tight">
+                        Grow Your Revenue Today
+                      </h2>
+                      <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-3 leading-relaxed">
+                        Send a direct inquiry or contact me via WhatsApp or email. Form submissions automatically record into Firebase Firestore and trigger a confirmation email via Resend (`noreply@shahidkhan.site`).
+                      </p>
+                    </div>
+
+                    <div className="space-y-3.5 font-medium text-xs sm:text-sm">
+                      <a href="mailto:contact@shahidkhan.site" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-[var(--text-muted)]">Direct Email</p>
+                          <p className="font-heading font-bold text-[var(--text-primary)]">contact@shahidkhan.site</p>
+                        </div>
+                      </a>
+
+                      <a href="tel:+919587867559" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                          <Phone className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-[var(--text-muted)]">Phone / WhatsApp</p>
+                          <p className="font-heading font-bold text-[var(--text-primary)]">+91 95878 67559</p>
+                        </div>
+                      </a>
+
+                      <div className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                          <MapPin className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-[var(--text-muted)]">Location</p>
+                          <p className="font-heading font-bold text-[var(--text-primary)]">Jaipur, Rajasthan, India</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Form Right */}
+                  <div className="lg:col-span-7">
+                    <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
+                      
+                      <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)] mb-5">Strategy Session Inquiry</h3>
+
+                      <form onSubmit={handleContactSubmit} className="space-y-3.5">
+                        
+                        {formSubmitted && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
+                          >
+                            <CheckCircle2 className="w-4 h-4 shrink-0" />
+                            <span>Thank you! Your submission has been saved and a confirmation email was triggered via Resend (noreply@shahidkhan.site).</span>
+                          </motion.div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Name *</label>
+                            <input 
+                              type="text" 
+                              name="name" 
+                              required 
+                              placeholder="Shahid Khan" 
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
+                            <input 
+                              type="email" 
+                              name="email" 
+                              required 
+                              placeholder="you@example.com" 
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Phone / WhatsApp *</label>
+                            <input 
+                              type="tel" 
+                              name="phone" 
+                              required
+                              placeholder="+91 98765 43210" 
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Business Name</label>
+                            <input 
+                              type="text" 
+                              name="businessName" 
+                              placeholder="Company or Brand Name" 
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Marketing Service *</label>
+                            <select 
+                              name="serviceRequired"
+                              required
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                            >
+                              <option value="">Select Primary Goal...</option>
+                              <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
+                              <option value="Google Ads (Search & PMax)">Google Ads (Search & PMax)</option>
+                              <option value="Lead Generation & Sales Funnels">Lead Generation & Sales Funnels</option>
+                              <option value="High-Converting Landing Page">High-Converting Landing Page</option>
+                              <option value="Meta Pixel & GA4 Setup">Meta Pixel & GA4 Setup</option>
+                              <option value="NGO Campaign & Payment Portal">NGO Campaign & Payment Portal</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget</label>
+                            <select 
+                              name="budget"
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                            >
+                              <option value="Flexible">Flexible / Discuss Strategy</option>
+                              <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
+                              <option value="₹30,000 - ₹75,000">₹30,000 - ₹75,000 / month</option>
+                              <option value="₹75,000+">₹75,000+ / month</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Project Details *</label>
+                          <textarea 
+                            rows={3} 
+                            name="message" 
+                            required 
+                            placeholder="Tell me about your product, current ad campaigns, or lead generation goals..." 
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
+                          ></textarea>
+                        </div>
+
+                        <button 
+                          type="submit" 
+                          disabled={submitting}
+                          className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                        >
+                          <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
+                        </button>
+
+                      </form>
+
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="pt-6 border-t border-[var(--border-color)] flex justify-between items-center">
+                  <button onClick={() => navigateTo('home')} className="text-xs font-heading font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 cursor-pointer">
+                    <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                  </button>
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+
+
+          {/* ==================== 6. SECRET ADMIN DASHBOARD (/admin) ==================== */}
+          {activePage === 'admin' && (
+            <motion.div
+              key="admin"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
+              className="py-12 max-w-7xl mx-auto px-6"
+            >
+              {!isAdminAuthenticated ? (
+                /* SECRET ADMIN LOGIN BOX */
+                <div className="max-w-md mx-auto py-12">
+                  <div className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl text-center space-y-6">
+                    <div className="w-12 h-12 rounded-2xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mx-auto">
+                      <Lock className="w-6 h-6" />
+                    </div>
+
+                    <div>
+                      <h1 className="font-display text-2xl font-extrabold text-[var(--text-primary)]">Secret Admin Login</h1>
+                      <p className="text-xs text-[var(--text-secondary)] mt-1">Enter passcode to manage website content, portfolio, & leads.</p>
+                    </div>
+
+                    <form onSubmit={handleAdminLogin} className="space-y-4">
+                      {adminPassError && (
+                        <p className="text-xs font-bold text-red-500 bg-red-500/10 p-2.5 rounded-xl border border-red-500/20">
+                          Incorrect admin passcode! (Default: admin123)
+                        </p>
+                      )}
+
+                      <input 
+                        type="password" 
+                        value={adminPasscode}
+                        onChange={(e) => setAdminPasscode(e.target.value)}
+                        placeholder="Enter Passcode..." 
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-center text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                      />
+
+                      <button 
+                        type="submit" 
+                        className="w-full py-3 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+                      >
+                        Unlock Admin Control Panel
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ) : (
+                /* FULL SECRET ADMIN MANAGEMENT PANEL */
+                <div className="space-y-8">
+                  
+                  {/* Admin Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6">
+                    <div>
+                      <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold tracking-widest bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        ADMIN DASHBOARD
+                      </span>
+                      <h1 className="font-display text-3xl font-extrabold text-[var(--text-primary)] mt-1">Website Content & Leads Control</h1>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={fetchLeads}
+                        className="p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                        title="Refresh Data"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${loadingLeads ? 'animate-spin' : ''}`} />
+                        <span>Sync</span>
+                      </button>
+
+                      <button 
+                        onClick={handleAdminLogout}
+                        className="px-4 py-2.5 rounded-xl bg-red-600 text-white font-heading text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition-colors cursor-pointer"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Admin Tabs Bar */}
+                  <div className="flex flex-wrap gap-2 border-b border-[var(--border-color)] pb-4">
+                    {[
+                      { id: 'leads', label: `📥 Inquiries & Leads (${leadsList.length})` },
+                      { id: 'projects', label: `📁 Portfolio & Projects (${projectsList.length})` },
+                      { id: 'services', label: `🛠️ Services (${servicesData.length})` },
+                      { id: 'tools', label: `🧰 Tools & Stack (${toolsData.length})` },
+                      { id: 'stats', label: `📈 Stats Counters` }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setAdminTab(tab.id)}
+                        className={`px-4 py-2 rounded-xl text-xs font-heading font-bold transition-all cursor-pointer ${
+                          adminTab === tab.id 
+                            ? 'bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-md' 
+                            : 'border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* TAB 1: LEADS & INQUIRIES */}
+                  {adminTab === 'leads' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Contact & Strategy Inquiries</h2>
+                        <span className="text-xs text-[var(--text-muted)] font-mono">Auto-saved via Firestore + Resend Email</span>
+                      </div>
+
+                      {leadsList.length === 0 ? (
+                        <div className="p-12 text-center rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                          <Inbox className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
+                          <p className="font-heading font-bold text-sm text-[var(--text-primary)]">No Submissions Yet</p>
+                          <p className="text-xs text-[var(--text-secondary)]">Form submissions from the Contact section will appear here automatically.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-4">
+                          {leadsList.map((lead, idx) => (
+                            <div key={lead.id || idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+                              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--border-color)] pb-3">
+                                <div>
+                                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{lead.name}</h3>
+                                  <p className="text-xs font-mono text-[var(--text-muted)]">{lead.email} • {lead.phone} • <span className="text-[10px] text-[var(--text-secondary)]">{lead.dateFormatted || lead.createdAt}</span></p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                    {lead.serviceRequired || 'Lead Inquiry'}
+                                  </span>
+                                  <button 
+                                    onClick={() => handleDeleteLead(lead.id)}
+                                    className="p-1.5 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold cursor-pointer"
+                                    title="Delete Lead Record"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[var(--text-secondary)]">
+                                <p><strong>Business:</strong> {lead.businessName || 'N/A'}</p>
+                                <p><strong>Monthly Ad Budget:</strong> {lead.budget || 'Flexible'}</p>
+                              </div>
+
+                              <p className="text-xs text-[var(--text-primary)] bg-[var(--bg-primary)] p-3 rounded-xl border border-[var(--border-color)] italic">
+                                "{lead.message}"
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB 2: PORTFOLIO & PROJECTS MANAGER */}
+                  {adminTab === 'projects' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Manage Portfolio Projects</h2>
+                        <button 
+                          onClick={() => setEditingProject({ title: '', category: 'Paid Advertising & Lead Gen', location: '', website: '', description: '', fullDescription: '', link: '' })}
+                          className="px-4 py-2 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" /> Add New Project
+                        </button>
+                      </div>
+
+                      {/* Add/Edit Project Form Modal/Box */}
+                      {editingProject && (
+                        <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-xl">
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">
+                            {editingProject.id ? 'Edit Project Details' : 'Add New Project'}
+                          </h3>
+                          <form onSubmit={handleSaveProject} className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Project Title *</label>
+                                <input name="title" defaultValue={editingProject.title} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Category *</label>
+                                <select name="category" defaultValue={editingProject.category} className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold">
+                                  <option value="Paid Advertising & Lead Gen">Paid Advertising & Lead Gen</option>
+                                  <option value="NGO Marketing & Growth">NGO Marketing & Growth</option>
+                                  <option value="Agency Marketing & Funnels">Agency Marketing & Funnels</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Location *</label>
+                                <input name="location" defaultValue={editingProject.location} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Website Domain / Label</label>
+                                <input name="website" defaultValue={editingProject.website} className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Short Card Summary *</label>
+                              <input name="description" defaultValue={editingProject.description} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Full Detailed Case Study Overview *</label>
+                              <textarea name="fullDescription" rows={3} defaultValue={editingProject.fullDescription} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold"></textarea>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Live URL Link (Optional)</label>
+                              <input name="link" defaultValue={editingProject.link} placeholder="https://example.com" className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                            </div>
+
+                            <div className="flex items-center gap-3 pt-2">
+                              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold cursor-pointer">
+                                Save Project
+                              </button>
+                              <button type="button" onClick={() => setEditingProject(null)} className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-bold cursor-pointer">
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
+                      {/* Projects Table List */}
+                      <div className="grid grid-cols-1 gap-3">
+                        {projectsList.map(project => (
+                          <div key={project.id} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                              <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">{project.category}</span>
+                              <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{project.title}</h3>
+                              <p className="text-xs text-[var(--text-secondary)]">{project.description}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button 
+                                onClick={() => setEditingProject(project)}
+                                className="p-2 rounded-xl border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" /> Edit
+                              </button>
+
+                              <button 
+                                onClick={() => handleDeleteProject(project.id)}
+                                className="p-2 rounded-xl border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: SERVICES MANAGER */}
+                  {adminTab === 'services' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Manage Digital Marketing Services</h2>
+                        <button 
+                          onClick={() => setEditingService({ name: '', desc: '' })}
+                          className="px-4 py-2 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" /> Add Service
+                        </button>
+                      </div>
+
+                      {editingService && (
+                        <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-xl">
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">
+                            {editingService.id ? 'Edit Service' : 'Add New Service'}
+                          </h3>
+                          <form onSubmit={handleSaveService} className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Service Name *</label>
+                              <input name="name" defaultValue={editingService.name} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Description *</label>
+                              <textarea name="desc" rows={2} defaultValue={editingService.desc} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold"></textarea>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold cursor-pointer">Save Service</button>
+                              <button type="button" onClick={() => setEditingService(null)} className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-bold cursor-pointer">Cancel</button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {servicesData.map(srv => (
+                          <div key={srv.id} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-start justify-between gap-3">
+                            <div>
+                              <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">{srv.name}</h4>
+                              <p className="text-xs text-[var(--text-secondary)] mt-1">{srv.desc}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => setEditingService(srv)} className="p-1.5 rounded-lg border border-[var(--border-color)] hover:bg-[var(--bg-hover)] cursor-pointer"><Edit3 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleDeleteService(srv.id)} className="p-1.5 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 4: TOOLS & STACK MANAGER */}
+                  {adminTab === 'tools' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Manage Marketing Tools</h2>
+                        <button 
+                          onClick={() => setEditingTool({ name: '', category: 'Paid Ads', desc: '' })}
+                          className="px-4 py-2 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" /> Add Tool
+                        </button>
+                      </div>
+
+                      {editingTool && (
+                        <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-xl">
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">
+                            {editingTool.id ? 'Edit Tool' : 'Add New Tool'}
+                          </h3>
+                          <form onSubmit={handleSaveTool} className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Tool Name *</label>
+                                <input name="name" defaultValue={editingTool.name} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Category *</label>
+                                <input name="category" defaultValue={editingTool.category} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1">Description *</label>
+                              <input name="desc" defaultValue={editingTool.desc} required className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold" />
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button type="submit" className="px-5 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold cursor-pointer">Save Tool</button>
+                              <button type="button" onClick={() => setEditingTool(null)} className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-bold cursor-pointer">Cancel</button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {toolsData.map(tool => (
+                          <div key={tool.id} className="p-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1">
+                            <span className="text-[9px] font-mono text-[var(--text-muted)] uppercase font-bold">{tool.category}</span>
+                            <h4 className="font-heading font-bold text-xs text-[var(--text-primary)]">{tool.name}</h4>
+                            <p className="text-[10px] text-[var(--text-secondary)]">{tool.desc}</p>
+                            <div className="flex items-center gap-1 pt-1">
+                              <button onClick={() => setEditingTool(tool)} className="p-1 rounded text-[10px] font-bold border border-[var(--border-color)] cursor-pointer">Edit</button>
+                              <button onClick={() => handleDeleteTool(tool.id)} className="p-1 rounded text-[10px] font-bold text-red-500 border border-red-500/20 cursor-pointer">Delete</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 5: STATS COUNTERS MANAGER */}
+                  {adminTab === 'stats' && (
+                    <div className="space-y-6 max-w-2xl">
+                      <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">Edit Animated Statistics Counters</h2>
+                      <form onSubmit={handleSaveStats} className="space-y-4">
+                        {siteStats.map((stat, idx) => (
+                          <div key={idx} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                            <h4 className="font-heading font-bold text-xs uppercase text-[var(--text-muted)]">Stat Counter #{idx + 1}</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <label className="block text-[10px] font-bold mb-1">Label</label>
+                                <input name={`label${idx}`} defaultValue={stat.label} required className="w-full p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-bold" />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold mb-1">Target Number</label>
+                                <input type="number" name={`target${idx}`} defaultValue={stat.target} required className="w-full p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-bold" />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold mb-1">Suffix (e.g. +)</label>
+                                <input name={`suffix${idx}`} defaultValue={stat.suffix} className="w-full p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-bold" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        <button type="submit" className="px-6 py-3 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer">
+                          Update All Statistics Counters
+                        </button>
+                      </form>
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </main>
+
+
+      {/* INTERACTIVE DETAILED PROJECT CASE STUDY MODAL */}
+      <AnimatePresence>
+        {selectedProjectModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProjectModal(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="relative w-full max-w-3xl rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto space-y-6 text-[var(--text-primary)]"
+            >
+              <button 
+                onClick={() => setSelectedProjectModal(null)}
+                className="absolute top-5 right-5 p-2 rounded-full border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors cursor-pointer"
+                aria-label="Close Case Study Modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="space-y-2 pr-8">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
+                    {selectedProjectModal.category}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)] font-semibold">
+                    📍 {selectedProjectModal.location}
+                  </span>
+                </div>
+                
+                <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  {selectedProjectModal.title}
+                </h2>
+              </div>
+
+              <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] space-y-2">
+                <h3 className="font-heading font-bold text-sm uppercase tracking-wider text-[var(--text-muted)] flex items-center gap-1.5">
+                  <FileText className="w-4 h-4" /> Case Study Overview
+                </h3>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                  {selectedProjectModal.fullDescription}
+                </p>
+              </div>
+
+              {selectedProjectModal.strategy && (
+                <div className="space-y-3">
+                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] flex items-center gap-2">
+                    <Target className="w-4 h-4 text-emerald-500" /> Strategy & Tactical Execution
+                  </h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    {selectedProjectModal.strategy.map((item, idx) => (
+                      <div key={idx} className="p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs text-[var(--text-secondary)] flex items-start gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedProjectModal.results && (
+                <div className="space-y-3">
+                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)] flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-emerald-500" /> Measurable Results & Impact
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {selectedProjectModal.results.map((res, idx) => (
+                      <div key={idx} className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-center space-y-1">
+                        <Award className="w-4 h-4 text-amber-500 mx-auto" />
+                        <p className="text-xs font-semibold text-[var(--text-primary)]">{res}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2 border-t border-[var(--border-color)] pt-4">
+                <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Services Delivered</p>
                 <div className="flex flex-wrap gap-2">
-                  {cat.skills.map((skill, sIdx) => (
-                    <span 
-                      key={sIdx}
-                      className="px-3 py-1.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--text-primary)] transition-colors flex items-center gap-1.5"
-                    >
-                      <Check className="w-3 h-3 text-emerald-500" />
-                      <span>{skill}</span>
+                  {selectedProjectModal.services && selectedProjectModal.services.map((srv, idx) => (
+                    <span key={idx} className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-medium">
+                      {srv}
                     </span>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
 
-        </div>
-      </section>
-
-
-      {/* MARKETING TECH TOOLS SECTION (REDUCED PADDING py-14) */}
-      <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Marketing Tech</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing Tools & Platforms</h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">The industry-standard marketing, tracking, creative, and web technologies I use to launch and scale profitability.</p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
-            {toolsList.map((tool, idx) => (
-              <div key={idx} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] hover:-translate-y-0.5 transition-all cursor-pointer group shadow-sm flex flex-col justify-between h-full">
-                <div>
-                  <span className="text-[9px] font-mono uppercase font-bold tracking-wider text-[var(--text-muted)] block mb-1">
-                    {tool.category}
-                  </span>
-                  <h4 className="font-heading font-bold text-sm text-[var(--text-primary)] group-hover:underline">
-                    {tool.name}
-                  </h4>
-                </div>
-                <p className="text-[10px] text-[var(--text-secondary)] mt-2 leading-tight">
-                  {tool.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* FEATURED CAMPAIGNS & PROJECTS SECTION (REDUCED PADDING py-14) */}
-      <section id="projects" className="py-14 border-t border-[var(--border-color)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-5">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Client Success</span>
-              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mt-1">Featured Campaigns & Projects</h2>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex flex-wrap gap-2">
-              {['All', 'Paid Advertising & Lead Gen', 'NGO Marketing & Growth', 'Agency Marketing & Funnels'].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveProjectFilter(filter)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-heading font-bold transition-all cursor-pointer ${
-                    activeProjectFilter === filter 
-                      ? 'bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-md' 
-                      : 'border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]'
-                  }`}
+              <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[var(--border-color)]">
+                <button 
+                  onClick={() => setSelectedProjectModal(null)}
+                  className="px-5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                 >
-                  {filter}
+                  Close Case Study
                 </button>
-              ))}
-            </div>
-          </div>
 
-          {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AnimatePresence mode="popLayout">
-              {filteredProjects.map((project) => (
-                <motion.div
-                  key={project.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 flex flex-col justify-between h-full hover:border-[var(--text-primary)] transition-all duration-300 group shadow-sm"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono uppercase font-bold tracking-wider border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
-                        {project.location}
-                      </span>
-                      {project.website && (
-                        <span className="text-[11px] font-mono text-[var(--text-muted)] flex items-center gap-1">
-                          <Globe className="w-3 h-3" /> {project.website}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-2 group-hover:underline">
-                      {project.title}
-                    </h3>
-
-                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-5">
-                      {project.description}
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex flex-wrap gap-1.5 mb-5 pt-3 border-t border-[var(--border-color)]">
-                      {project.services.map((srv, idx) => (
-                        <span key={idx} className="px-2 py-0.5 rounded-md bg-[var(--bg-primary)] text-[10px] font-medium text-[var(--text-secondary)]">
-                          {srv}
-                        </span>
-                      ))}
-                    </div>
-
-                    {project.link ? (
-                      <a 
-                        href={project.link} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="w-full py-2.5 rounded-xl border border-[var(--border-dark)] bg-transparent text-xs font-heading font-bold text-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-wider"
-                      >
-                        <span>View Live Platform</span>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                      </a>
-                    ) : (
-                      <div className="w-full py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-heading font-semibold text-[var(--text-muted)] text-center">
-                        Active Lead Campaign
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* WHAT I CAN DO FOR YOU (REDUCED PADDING py-14) */}
-      <section id="services" className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Services</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Digital Marketing Services</h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">Data-driven paid advertising, lead capture funnels, and marketing analytics designed to grow your revenue.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {servicesList.map((srv, idx) => (
-              <div key={idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-sm flex flex-col justify-between h-full">
-                <div>
-                  <div className="w-7 h-7 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-primary)] flex items-center justify-center font-heading font-bold text-[11px] mb-3">
-                    {(idx + 1).toString().padStart(2, '0')}
-                  </div>
-                  <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)] mb-1.5">
-                    {srv.name}
-                  </h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    {srv.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* MARKETING RESULTS & PERFORMANCE SECTION (REDUCED PADDING py-14) */}
-      <section className="py-14 border-t border-[var(--border-color)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 sm:p-10 shadow-xl">
-            <div className="text-center max-w-2xl mx-auto mb-8 space-y-1">
-              <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Impact</span>
-              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Measurable Marketing Outcomes</h2>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
-                  <AnimatedCounter target={1000} suffix="+" />
-                </p>
-                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Leads Generated</p>
-              </div>
-
-              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
-                  <AnimatedCounter target={50} suffix="+" />
-                </p>
-                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Campaigns Managed</p>
-              </div>
-
-              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
-                  <AnimatedCounter target={5} suffix="+" />
-                </p>
-                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Brands Scaled</p>
-              </div>
-
-              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-xl sm:text-2xl text-[var(--text-primary)]">
-                  <AnimatedCounter target={20} suffix="+" />
-                </p>
-                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">High ROAS Funnels</p>
-              </div>
-
-              <div className="p-3 border-r border-[var(--border-color)] last:border-0">
-                <p className="font-display font-extrabold text-lg sm:text-xl text-[var(--text-primary)]">High</p>
-                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">ROAS Focus</p>
-              </div>
-
-              <div className="p-3">
-                <p className="font-display font-extrabold text-lg sm:text-xl text-[var(--text-primary)]">100%</p>
-                <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1">Growth Support</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* WHY CHOOSE ME (REDUCED PADDING py-14) */}
-      <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Why Hire Me</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing First Advantage</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              { title: "Meta & Google Ads Focus", desc: "Expertise in structuring high-converting Meta paid ads, Google Search, and PMax campaigns." },
-              { title: "Lead Generation Architecture", desc: "Every campaign is built around collecting qualified leads, phone calls, and direct customer inquiries." },
-              { title: "Meta Pixel & GA4 Analytics", desc: "Verified conversion tracking setups so you can track exact CPA, Cost-per-Lead, and ROAS." },
-              { title: "High-Converting Landing Pages", desc: "Custom landing page development engineered for maximum visitor-to-lead conversion rates." },
-              { title: "n8n Lead Automation", desc: "Connecting lead forms to CRM systems, email alerts, and instant WhatsApp follow-up workflows." },
-              { title: "Transparent Campaign Reporting", desc: "Clear, data-backed reporting on impressions, clicks, lead volume, cost per lead, and campaign ROAS." },
-              { title: "Affordable & Flexible Models", desc: "Custom campaign packages structured for local businesses, agencies, and non-profits." },
-              { title: "AI-Powered Strategy", desc: "Using AI tools (ChatGPT, Claude) for audience research, creative copywriting, and rapid optimization." }
-            ].map((item, idx) => (
-              <div key={idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all space-y-1.5 h-full shadow-sm">
-                <div className="w-7 h-7 rounded-lg bg-[var(--text-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold text-[11px]">
-                  ✓
-                </div>
-                <h3 className="font-heading font-bold text-sm sm:text-base text-[var(--text-primary)]">{item.title}</h3>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* CAMPAIGN WORKFLOW PROCESS (REDUCED PADDING py-14) */}
-      <section id="process" className="py-14 border-t border-[var(--border-color)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Workflow</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Campaign Process</h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">A battle-tested 6-step framework for launching profitable digital advertising campaigns.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {processSteps.map((p, idx) => (
-              <div key={idx} className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] relative hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
-                <span className="font-display font-extrabold text-4xl text-[var(--border-color)] block mb-3">
-                  {p.step}
-                </span>
-                <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] mb-1.5">
-                  {p.title}
-                </h3>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                  {p.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* TESTIMONIALS SECTION (REDUCED PADDING py-14) */}
-      <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Feedback</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Client Testimonials</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, idx) => (
-              <div key={idx} className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col justify-between hover:border-[var(--text-primary)] transition-all shadow-sm h-full">
-                <div className="space-y-3">
-                  <div className="flex text-amber-500 gap-1 text-xs">
-                    {"★★★★★"}
-                  </div>
-                  <p className="text-xs sm:text-sm text-[var(--text-secondary)] italic leading-relaxed">
-                    "{t.quote}"
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-[var(--border-color)] mt-4">
-                  <h4 className="font-heading font-bold text-xs sm:text-sm text-[var(--text-primary)]">{t.author}</h4>
-                  <p className="text-[11px] text-[var(--text-muted)]">{t.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* FAQ SECTION (REDUCED PADDING py-14) */}
-      <section id="faq" className="py-14 border-t border-[var(--border-color)]">
-        <div className="max-w-4xl mx-auto px-6">
-          
-          <div className="text-center mb-12 space-y-1.5">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Questions</span>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">Marketing FAQ</h2>
-          </div>
-
-          <div className="space-y-3">
-            {faqItems.map((item, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div 
-                  key={idx}
-                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] overflow-hidden transition-colors"
-                >
-                  <button
-                    onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full px-5 py-4 text-left font-heading font-bold text-sm sm:text-base text-[var(--text-primary)] flex items-center justify-between gap-4 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                {selectedProjectModal.link ? (
+                  <a 
+                    href={selectedProjectModal.link} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="px-6 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold hover:opacity-90 transition-opacity flex items-center gap-2 shadow-md cursor-pointer"
                   >
-                    <span>{item.q}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  <AnimatePresence>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="px-5 pb-5 text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--border-color)] pt-3"
-                      >
-                        {item.a}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* CONTACT SECTION (REDUCED PADDING py-14) */}
-      <section id="contact" className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] relative">
-        <div className="max-w-7xl mx-auto px-6">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            
-            {/* Contact Info Left */}
-            <div className="lg:col-span-5 space-y-6">
-              <div>
-                <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] font-bold">Start Scaling</span>
-                <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mt-1 leading-tight">
-                  Grow Your Business Today
-                </h2>
-                <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-3 leading-relaxed">
-                  Ready to launch high-ROAS Meta/Google ads, capture qualified leads, or build a conversion-focused landing page? Let's discuss your marketing strategy.
-                </p>
-              </div>
-
-              <div className="space-y-3.5 font-medium text-xs sm:text-sm">
-                <a href="mailto:contact@shahidkhan.site" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
-                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-[var(--text-muted)]">Direct Email</p>
-                    <p className="font-heading font-bold text-[var(--text-primary)]">contact@shahidkhan.site</p>
-                  </div>
-                </a>
-
-                <a href="tel:+919587867559" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
-                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-[var(--text-muted)]">Phone / WhatsApp</p>
-                    <p className="font-heading font-bold text-[var(--text-primary)]">+91 95878 67559</p>
-                  </div>
-                </a>
-
-                <div className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5">
-                  <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-[var(--text-muted)]">Location</p>
-                    <p className="font-heading font-bold text-[var(--text-primary)]">Jaipur, Rajasthan, India</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Comprehensive Contact Form Right */}
-            <div className="lg:col-span-7">
-              <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
-                
-                <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)] mb-5">Book a Strategy Session</h3>
-
-                <form onSubmit={handleContactSubmit} className="space-y-3.5">
-                  
-                  {formSubmitted && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
-                    >
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      <span>Thank you! Your marketing inquiry has been saved to Firebase. I will get back to you shortly.</span>
-                    </motion.div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Name *</label>
-                      <input 
-                        type="text" 
-                        name="name" 
-                        required 
-                        placeholder="Shahid Khan" 
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
-                      <input 
-                        type="email" 
-                        name="email" 
-                        required 
-                        placeholder="you@example.com" 
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Phone / WhatsApp *</label>
-                      <input 
-                        type="tel" 
-                        name="phone" 
-                        required
-                        placeholder="+91 98765 43210" 
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Business Name</label>
-                      <input 
-                        type="text" 
-                        name="businessName" 
-                        placeholder="Company or Brand Name" 
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Marketing Service *</label>
-                      <select 
-                        name="serviceRequired"
-                        required
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      >
-                        <option value="">Select Primary Goal...</option>
-                        <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
-                        <option value="Google Ads (Search & PMax)">Google Ads (Search & PMax)</option>
-                        <option value="Lead Generation & Sales Funnels">Lead Generation & Sales Funnels</option>
-                        <option value="High-Converting Landing Page">High-Converting Landing Page</option>
-                        <option value="Meta Pixel & GA4 Setup">Meta Pixel & GA4 Setup</option>
-                        <option value="NGO Campaign & Payment Portal">NGO Campaign & Payment Portal</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget</label>
-                      <select 
-                        name="budget"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                      >
-                        <option value="Flexible">Flexible / Discuss Strategy</option>
-                        <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
-                        <option value="₹30,000 - ₹75,000">₹30,000 - ₹75,000 / month</option>
-                        <option value="₹75,000+">₹75,000+ / month</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Project Details *</label>
-                    <textarea 
-                      rows={3} 
-                      name="message" 
-                      required 
-                      placeholder="Tell me about your product, current ad campaigns, or lead generation goals..." 
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
-                    ></textarea>
-                  </div>
-
+                    <span>Visit Live Site</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                ) : (
                   <button 
-                    type="submit" 
-                    disabled={submitting}
-                    className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                    onClick={() => {
+                      setSelectedProjectModal(null);
+                      navigateTo('contact');
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold hover:opacity-90 transition-opacity flex items-center gap-2 shadow-md cursor-pointer"
                   >
-                    <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
+                    <span>Book Similar Ad Campaign</span>
+                    <ArrowUpRight className="w-4 h-4" />
                   </button>
-
-                </form>
-
+                )}
               </div>
-            </div>
-
+            </motion.div>
           </div>
-
-        </div>
-      </section>
+        )}
+      </AnimatePresence>
 
 
       {/* FLOATING ACTION BUTTON (WHATSAPP QUICK CHAT) */}
@@ -1298,7 +2612,7 @@ export default function App() {
       </a>
 
 
-      {/* FOOTER */}
+      {/* FOOTER WITH CLEAN PATH LINKS */}
       <footer className="py-8 border-t border-[var(--border-color)] bg-[var(--bg-primary)]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           
@@ -1314,11 +2628,11 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-5 text-xs font-medium text-[var(--text-secondary)]">
-            <a href="#about" className="hover:text-[var(--text-primary)]">About</a>
-            <a href="#skills" className="hover:text-[var(--text-primary)]">Skills</a>
-            <a href="#services" className="hover:text-[var(--text-primary)]">Services</a>
-            <a href="#projects" className="hover:text-[var(--text-primary)]">Campaigns</a>
-            <a href="#contact" className="hover:text-[var(--text-primary)]">Contact</a>
+            <button onClick={() => navigateTo('home')} className="hover:text-[var(--text-primary)] cursor-pointer">Home</button>
+            <button onClick={() => navigateTo('about')} className="hover:text-[var(--text-primary)] cursor-pointer">About & Skills</button>
+            <button onClick={() => navigateTo('services')} className="hover:text-[var(--text-primary)] cursor-pointer">Services</button>
+            <button onClick={() => navigateTo('projects')} className="hover:text-[var(--text-primary)] cursor-pointer">Portfolio</button>
+            <button onClick={() => navigateTo('contact')} className="hover:text-[var(--text-primary)] cursor-pointer">Contact</button>
           </div>
 
           <div className="flex items-center gap-3 text-xs font-bold text-[var(--text-primary)]">

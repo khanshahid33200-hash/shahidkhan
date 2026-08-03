@@ -37,7 +37,7 @@ Results-driven Digital Marketing Specialist and AI-driven Web Developer with ext
   * Built custom admin dashboard and implemented CRM system to track lead pipelines in real time.
   * Designed and managed targeted Meta Ads campaigns driving high-intent local customer inquiries.
 
-* **Shikva Foundation, New Delhi** *(NGO Website: [shikvafoundation.org](https://shikvafoundation.org))*
+* **Shikva Foundation, New Delhi** *(NGO Website: [shikvaafoundation.org](https://shikvaafoundation.org))*
   * Developed complete NGO web application featuring donation management and fundraising landing pages.
   * Integrated Razorpay payment gateway for secure online donations and automated receipt processing.
   * Managed digital fundraising campaigns and social media outreach to expand nationwide donor participation.
