@@ -1378,15 +1378,15 @@ export default function App() {
                       className="w-full max-w-sm lg:max-w-md z-20"
                     >
                       <HeroPhoto3D className="w-full">
-                        <div className="rounded-3xl overflow-hidden shadow-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2">
+                        <div className="group rounded-3xl overflow-hidden shadow-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-2 transition-all duration-500 cursor-pointer">
                           <div className="rounded-2xl overflow-hidden relative">
                             <img 
                               src="/shahid_photo.png" 
                               onError={(e) => { e.currentTarget.src = heroPhoto; }}
                               alt="Shahid Khan — Digital Marketing Specialist" 
-                              className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-500 transform group-hover:scale-102"
+                              className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 hover:grayscale-0 hover:contrast-100 transition-all duration-700 ease-out transform group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-20 transition-opacity duration-500"></div>
                             <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl backdrop-blur-md bg-black/60 border border-white/10 text-white flex items-center justify-between">
                               <div>
                                 <p className="font-heading font-bold text-xs sm:text-sm">Shahid Khan</p>
