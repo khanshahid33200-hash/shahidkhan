@@ -165,7 +165,8 @@ export default function App() {
             <div className="lg:col-span-5 flex justify-center lg:justify-end">
               <div className="relative w-full max-w-md lg:max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-[var(--border-color)] group">
                 <img 
-                  src={heroPhoto} 
+                  src="/shahid_photo.png" 
+                  onError={(e) => { e.currentTarget.src = heroPhoto; }}
                   alt="Shahid Khan — Digital Marketer & AI Website Creator" 
                   className="w-full h-auto object-cover filter grayscale contrast-105 group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-500 transform group-hover:scale-102"
                 />
