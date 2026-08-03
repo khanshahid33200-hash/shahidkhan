@@ -665,6 +665,47 @@ export default function App() {
     }
   };
 
+  // Quick Close Inquiry Handler
+  const handleAdminCloseLead = (lead) => {
+    if (!lead) return;
+    const confirmClose = window.confirm(`Are you sure you want to close Ticket #${lead.ticketId || lead.id} for ${lead.name}? This will mark the inquiry as Closed and send an automated email update to the client.`);
+    if (!confirmClose) return;
+
+    const closeReply = {
+      sender: "Shahid Khan",
+      status: "Closed",
+      text: "Your inquiry has been officially marked as resolved and closed by Shahid Khan.",
+      createdAt: new Date().toISOString(),
+      dateFormatted: new Date().toLocaleString()
+    };
+
+    const updatedLeads = leadsList.map(l => {
+      if (l.id === lead.id) {
+        return {
+          ...l,
+          status: 'Closed',
+          updatedAt: new Date().toLocaleString(),
+          replies: [closeReply, ...(l.replies || [])]
+        };
+      }
+      return l;
+    });
+
+    setLeadsList(updatedLeads);
+    localStorage.setItem('site_leads', JSON.stringify(updatedLeads));
+
+    // Dispatch automated email notification to client
+    sendResendConfirmationEmail(
+      lead.name,
+      lead.email,
+      lead.serviceRequired,
+      lead.ticketId || lead.id,
+      'update',
+      'Closed',
+      'Your inquiry has been officially marked as resolved and closed by Shahid Khan. If you have any further questions, feel free to reach out via WhatsApp or submit a new inquiry.'
+    );
+  };
+
   // Admin Passcode Authentication
   const handleAdminLogin = (e) => {
     e.preventDefault();
@@ -2488,6 +2529,16 @@ export default function App() {
                                   >
                                     Reply / Update
                                   </button>
+
+                                  {lead.status !== 'Closed' && (
+                                    <button 
+                                      onClick={() => handleAdminCloseLead(lead)}
+                                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition-colors cursor-pointer flex items-center gap-1"
+                                      title="Close inquiry & send email update to client"
+                                    >
+                                      <span>Close Inquiry 🔒</span>
+                                    </button>
+                                  )}
 
                                   <button 
                                     onClick={() => handleDeleteLead(lead.id)}
