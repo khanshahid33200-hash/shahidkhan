@@ -43,7 +43,9 @@ import {
   Save,
   RefreshCw,
   Eye,
-  Inbox
+  Inbox,
+  Calendar,
+  PhoneCall
 } from 'lucide-react';
 
 // 3D Tilt Card Component reserved ONLY for Hero Photo (Disabled on Mobile)
@@ -661,6 +663,10 @@ export default function App() {
     const name = formData.get('demoName') || '';
     const email = formData.get('demoEmail') || '';
     const phone = formData.get('demoPhone') || '';
+    const company = formData.get('demoCompany') || '';
+    const website = formData.get('demoWebsite') || '';
+    const serviceRequired = formData.get('demoService') || 'Meta Ads Campaign';
+    const budget = formData.get('demoBudget') || 'Flexible';
     const note = formData.get('demoNote') || '';
 
     const leadId = 'lead_demo_' + Date.now();
@@ -675,10 +681,11 @@ export default function App() {
       name,
       email,
       phone,
-      businessName: demoModalType,
-      serviceRequired: `${demoModalType}: ${note || 'Live Strategy Consultation'}`,
-      budget: "Discuss on Call",
-      message: `${demoModalType} requested. Time/Note: ${note || 'None provided'}`,
+      businessName: company || demoModalType,
+      website: website || 'Not provided',
+      serviceRequired: `${demoModalType}: ${serviceRequired}`,
+      budget,
+      message: `${demoModalType} requested. Company: ${company || 'N/A'}, Website: ${website || 'N/A'}, Note: ${note || 'None'}`,
       formType: demoModalType,
       type: demoModalType,
       createdAt: dateFormatted,
@@ -1304,7 +1311,7 @@ export default function App() {
               <section className="relative pt-4 sm:pt-6 pb-10 md:pb-12 max-w-7xl mx-auto px-6">
                 
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-secondary)] mb-4 sm:mb-6 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-[var(--text-primary)] animate-pulse"></span>
                   <span>Available for Paid Ad Campaigns & Growth Projects</span>
                 </div>
 
@@ -1324,19 +1331,19 @@ export default function App() {
                     {/* Primary CTAs */}
                     <div className="flex flex-wrap items-center gap-3 pt-1">
                       <button 
-                        onClick={() => { setDemoModalType('Book a Demo'); setDemoModalOpen(true); }}
-                        className="px-5 py-3.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 shadow-lg cursor-pointer"
+                        onClick={() => { setDemoModalType('Request a Call Back'); setDemoModalOpen(true); }}
+                        className="px-5 py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-all duration-300 flex items-center gap-2 shadow-lg cursor-pointer border border-[var(--border-dark)]"
                       >
-                        <Calendar className="w-4 h-4 text-emerald-300" />
-                        <span>Book a Demo</span>
+                        <PhoneCall className="w-4 h-4" />
+                        <span>Request a Call Back</span>
                       </button>
 
                       <button 
-                        onClick={() => { setDemoModalType('Get a Call Back'); setDemoModalOpen(true); }}
-                        className="px-5 py-3.5 rounded-xl border border-emerald-600/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-emerald-500/20 transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
+                        onClick={() => navigateTo('projects')}
+                        className="px-5 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
                       >
-                        <PhoneCall className="w-4 h-4" />
-                        <span>Get a Call Back</span>
+                        <Layers className="w-4 h-4" />
+                        <span>View Portfolio</span>
                       </button>
 
                       <button 
@@ -1416,6 +1423,220 @@ export default function App() {
                   ))}
                 </div>
 
+              </section>
+
+              {/* GROWTH STRATEGY ROADMAP & INDUSTRY FRAMEWORK */}
+              <section className="py-14 border-t border-[var(--border-color)]">
+                <div className="max-w-7xl mx-auto px-6 space-y-12">
+                  <div className="text-center max-w-2xl mx-auto space-y-2">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-primary)] font-extrabold px-3 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)]">
+                      GROWTH METHODOLOGY
+                    </span>
+                    <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-[var(--text-primary)]">
+                      The 4-Step High-ROAS Campaign Architecture
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                      Every campaign is engineered using a scientific, data-first approach designed to maximize return on ad spend and eliminate wasted marketing budget.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-md space-y-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono font-bold text-sm flex items-center justify-center border border-[var(--border-color)]">
+                        01
+                      </div>
+                      <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Market & Competitor Audit</h3>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Deep dive into target customer psychology, competitor ad creatives, offer positioning, and historical ad account performance data.
+                      </p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-md space-y-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono font-bold text-sm flex items-center justify-center border border-[var(--border-color)]">
+                        02
+                      </div>
+                      <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Funnel & Pixel Architecture</h3>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Deploy Meta Conversions API (CAPI), GA4 server-side tracking, custom lead capture forms, and fast-loading mobile landing pages.
+                      </p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-md space-y-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono font-bold text-sm flex items-center justify-center border border-[var(--border-color)]">
+                        03
+                      </div>
+                      <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Multi-Angle Creative Launch</h3>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Launch high-converting UGC video hooks, carousel catalog ads, and Google Search campaigns targeting high-intent buyer keywords.
+                      </p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] transition-all shadow-md space-y-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono font-bold text-sm flex items-center justify-center border border-[var(--border-color)]">
+                        04
+                      </div>
+                      <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Daily Optimization & Scaling</h3>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Prune low-performing ad sets, double down on winning audiences, deploy custom retargeting funnels, and scale daily budgets smoothly.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* INDUSTRY-SPECIFIC GROWTH BLUEPRINTS SECTION */}
+              <section className="py-14 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
+                <div className="max-w-7xl mx-auto px-6 space-y-12">
+                  <div className="text-center max-w-2xl mx-auto space-y-2">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-primary)] font-extrabold px-3 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)]">
+                      TAILORED STRATEGIES
+                    </span>
+                    <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-[var(--text-primary)]">
+                      Industry Growth Blueprints
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                      Custom performance marketing architectures optimized for specific business verticals.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-sm hover:border-[var(--text-primary)] transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-lg border border-[var(--border-color)]">
+                          🛍️
+                        </div>
+                        <div>
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">E-Commerce & D2C Brands</h3>
+                          <p className="text-xs text-[var(--text-muted)]">Scale Online Store Sales & Catalog ROAS</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Deploy dynamic product catalog ads, high-converting checkout landing pages, abandoned cart WhatsApp automation, and Meta Conversions API (CAPI) server tracking to lower Cost Per Acquisition (CPA) and boost 3.5x+ ROAS.
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]">
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Meta Advantage+ Catalog</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Google Shopping & PMax</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Shopify / Woo Checkout</span>
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-sm hover:border-[var(--text-primary)] transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-lg border border-[var(--border-color)]">
+                          🏢
+                        </div>
+                        <div>
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">B2B Agencies & High-Ticket Services</h3>
+                          <p className="text-xs text-[var(--text-muted)]">Pre-Qualified Client Consultation Booking</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Build automated appointment booking funnels with pre-qualifying survey forms, instant CRM notification sync, and Google Search campaigns capturing high-intent B2B decision makers.
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]">
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">High-Intent Lead Forms</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Google Search Ads</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Automated Calendly Sync</span>
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-sm hover:border-[var(--text-primary)] transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-lg border border-[var(--border-color)]">
+                          📍
+                        </div>
+                        <div>
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">Local Retail & Healthcare Providers</h3>
+                          <p className="text-xs text-[var(--text-muted)]">Geo-Targeted Inbound Phone Calls</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Hyper-local radius advertising (10km - 25km radius around store/clinic) targeting residents with click-to-call ads, Google Business Profile optimization, and direct WhatsApp booking buttons.
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]">
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Radius Radius Ads</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Click-To-WhatsApp</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Google Local Map Ads</span>
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-sm hover:border-[var(--text-primary)] transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-lg border border-[var(--border-color)]">
+                          💚
+                        </div>
+                        <div>
+                          <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">NGOs & Non-Profit Foundations</h3>
+                          <p className="text-xs text-[var(--text-muted)]">Donor Acquisition & Automated 80G Tax Portals</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Nationwide donor awareness campaigns linked to instant Razorpay payment pages. Includes automated PDF 80G tax exemption receipt dispatches and real-time donor verification.
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]">
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Razorpay Payment Pages</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Automated 80G Receipts</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-primary)] text-[10px] font-mono font-bold text-[var(--text-secondary)]">Meta Emotional Storytelling</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* DIGITAL MARKETING VS TRADITIONAL ADVERTISING COMPARISON TABLE */}
+              <section className="py-14 border-t border-[var(--border-color)]">
+                <div className="max-w-7xl mx-auto px-6 space-y-10">
+                  <div className="text-center max-w-2xl mx-auto space-y-2">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-primary)] font-extrabold px-3 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)]">
+                      THE PERFORMANCE ADVANTAGE
+                    </span>
+                    <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-[var(--text-primary)]">
+                      Why Performance Digital Marketing Wins
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                      Compare traditional offline ads (Newspapers, Banners) with targeted digital campaigns.
+                    </p>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse rounded-2xl overflow-hidden border border-[var(--border-color)]">
+                      <thead>
+                        <tr className="bg-[var(--bg-card)] border-b border-[var(--border-color)] text-[var(--text-primary)]">
+                          <th className="p-4 font-heading font-bold">Feature / Metric</th>
+                          <th className="p-4 font-heading font-bold text-[var(--text-primary)] bg-[var(--bg-primary)]">Shahid Khan Digital Marketing System</th>
+                          <th className="p-4 font-heading font-bold text-[var(--text-muted)]">Traditional Offline Ads (Print/Banners)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
+                        <tr>
+                          <td className="p-4 font-semibold text-[var(--text-primary)]">Targeting Precision</td>
+                          <td className="p-4 font-bold text-[var(--text-primary)] bg-[var(--bg-card)]">Laser-targeted by interest, income, search intent & city</td>
+                          <td className="p-4">Broad mass audience with zero interest filtering</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4 font-semibold text-[var(--text-primary)]">Lead Measurement</td>
+                          <td className="p-4 font-bold text-[var(--text-primary)] bg-[var(--bg-card)]">100% trackable down to exact Cost Per Lead (CPL)</td>
+                          <td className="p-4">Impossible to track exact leads or conversions</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4 font-semibold text-[var(--text-primary)]">Budget Flexibility</td>
+                          <td className="p-4 font-bold text-[var(--text-primary)] bg-[var(--bg-card)]">Start from ₹500/day, pause or scale instantly anytime</td>
+                          <td className="p-4">High upfront non-refundable contract payments</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4 font-semibold text-[var(--text-primary)]">Optimization Speed</td>
+                          <td className="p-4 font-bold text-[var(--text-primary)] bg-[var(--bg-card)]">Real-time daily ad creative & audience tweaks</td>
+                          <td className="p-4">Fixed prints cannot be edited once published</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4 font-semibold text-[var(--text-primary)]">Return On Ad Spend (ROAS)</td>
+                          <td className="p-4 font-bold text-[var(--text-primary)] bg-[var(--bg-card)]">Proven 3x - 6x Return on Ad Spend (ROAS) focus</td>
+                          <td className="p-4">Uncertain ROI with no conversion guarantee</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </section>
 
               {/* ABOUT SUMMARY ON HOME PAGE */}
@@ -1938,6 +2159,67 @@ export default function App() {
                       <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Lead Generation & Sales Funnels</h3>
                       <p className="text-xs text-[var(--text-secondary)]">Engineered landing pages and lead capture systems built to convert cold paid traffic into pre-qualified sales calls.</p>
                     </div>
+
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-1.5 shadow-sm">
+                      <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center mb-2 font-bold text-xs">
+                        🛡️
+                      </div>
+                      <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">Transparent Ad Spend Protection</h3>
+                      <p className="text-xs text-[var(--text-secondary)]">100% full ad account access with direct payment credentials. Refunds available for unused pre-ad spend budgets.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* THE 5-PHASE GROWTH EXECUTION PROTOCOL */}
+                <div className="space-y-6 pt-8 border-t border-[var(--border-color)]">
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-primary)] font-extrabold px-3 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)]">
+                      OPERATIONAL STANDARD
+                    </span>
+                    <h2 className="font-heading font-bold text-2xl text-[var(--text-primary)]">The 5-Phase Growth Execution Protocol</h2>
+                    <p className="text-xs text-[var(--text-secondary)]">Standardized operating system applied to every client campaign.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                      <span className="text-xs font-mono font-bold text-[var(--text-primary)]">PHASE 01</span>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Customer Avatar</h4>
+                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                        Identify high-ticket buyer personas, pain points, and competitors.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                      <span className="text-xs font-mono font-bold text-[var(--text-primary)]">PHASE 02</span>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Tracking Setup</h4>
+                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                        Deploy Meta CAPI, GA4 server-side events, and Google Tag Manager.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                      <span className="text-xs font-mono font-bold text-[var(--text-primary)]">PHASE 03</span>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Funnel Build</h4>
+                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                        Design high-speed mobile landing pages and instant lead forms.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                      <span className="text-xs font-mono font-bold text-[var(--text-primary)]">PHASE 04</span>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Ad Launch</h4>
+                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                        Launch multi-creative campaigns on Facebook, Instagram & Google.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                      <span className="text-xs font-mono font-bold text-[var(--text-primary)]">PHASE 05</span>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">ROAS Scale</h4>
+                      <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                        Daily metric optimization, budget scaling, and custom retargeting.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -2050,6 +2332,95 @@ export default function App() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* SERVICE DELIVERABLES MATRIX */}
+                <div className="space-y-6 pt-8 border-t border-[var(--border-color)]">
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-primary)] font-extrabold px-3 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)]">
+                      DELIVERABLES BREAKDOWN
+                    </span>
+                    <h2 className="font-heading font-bold text-2xl text-[var(--text-primary)]">Marketing Service Engagement Models</h2>
+                    <p className="text-xs text-[var(--text-secondary)]">Tailored packages designed for different stages of business growth.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-sm flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-color)]">
+                          STARTUP / LOCAL BUSINESS
+                        </span>
+                        <h3 className="font-display font-extrabold text-xl text-[var(--text-primary)]">Lead Express Engine</h3>
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                          Ideal for local service providers, doctors, real estate agents & retail stores seeking immediate qualified phone calls.
+                        </p>
+                        <ul className="space-y-2 text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
+                          <li className="flex items-center gap-2">✓ Meta Lead Form Ads Setup</li>
+                          <li className="flex items-center gap-2">✓ WhatsApp Instant Lead Integration</li>
+                          <li className="flex items-center gap-2">✓ Custom Ad Copy & Visual Hooks</li>
+                          <li className="flex items-center gap-2">✓ Weekly Performance Reports</li>
+                        </ul>
+                      </div>
+                      <button 
+                        onClick={() => { setDemoModalType('Request a Call Back'); setDemoModalOpen(true); }}
+                        className="w-full py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] font-heading text-xs font-bold hover:bg-[var(--bg-hover)] transition-all cursor-pointer"
+                      >
+                        Inquire About Express Engine
+                      </button>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border-2 border-[var(--border-dark)] bg-[var(--bg-card)] space-y-4 shadow-xl flex flex-col justify-between relative">
+                      <div className="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-[var(--btn-bg)] text-[var(--btn-text)] font-mono text-[9px] font-bold uppercase tracking-wider">
+                        MOST POPULAR
+                      </div>
+                      <div className="space-y-3">
+                        <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-color)]">
+                          GROWING BRANDS & AGENCIES
+                        </span>
+                        <h3 className="font-display font-extrabold text-xl text-[var(--text-primary)]">Full-Funnel Growth Scale</h3>
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                          Complete performance ecosystem including dedicated high-speed landing pages, CAPI tracking, Meta & Google Ads.
+                        </p>
+                        <ul className="space-y-2 text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
+                          <li className="flex items-center gap-2">✓ Meta Ads + Google Search & PMax</li>
+                          <li className="flex items-center gap-2">✓ Dedicated Mobile Landing Page Build</li>
+                          <li className="flex items-center gap-2">✓ Meta Conversions API & GA4 Setup</li>
+                          <li className="flex items-center gap-2">✓ Dynamic Retargeting & Custom Audiences</li>
+                          <li className="flex items-center gap-2">✓ Daily ROAS & Budget Optimization</li>
+                        </ul>
+                      </div>
+                      <button 
+                        onClick={() => { setDemoModalType('Request a Call Back'); setDemoModalOpen(true); }}
+                        className="w-full py-3 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                      >
+                        Launch Growth Scale 🚀
+                      </button>
+                    </div>
+
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4 shadow-sm flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-color)]">
+                          NGO & ENTERPRISE
+                        </span>
+                        <h3 className="font-display font-extrabold text-xl text-[var(--text-primary)]">Donor & Corporate Ecosystem</h3>
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                          Engineered for non-profits and high-volume corporate campaigns requiring 80G tax receipt portals and automated payouts.
+                        </p>
+                        <ul className="space-y-2 text-xs text-[var(--text-secondary)] pt-2 border-t border-[var(--border-color)]">
+                          <li className="flex items-center gap-2">✓ Razorpay Payment Gateway Integration</li>
+                          <li className="flex items-center gap-2">✓ Automated 80G Tax Receipt Emails</li>
+                          <li className="flex items-center gap-2">✓ Multi-Channel Meta & Google Ads</li>
+                          <li className="flex items-center gap-2">✓ Real-time Donor CRM & Dashboard</li>
+                        </ul>
+                      </div>
+                      <button 
+                        onClick={() => { setDemoModalType('Request a Call Back'); setDemoModalOpen(true); }}
+                        className="w-full py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] font-heading text-xs font-bold hover:bg-[var(--bg-hover)] transition-all cursor-pointer"
+                      >
+                        Inquire Enterprise Solution
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-6 border-t border-[var(--border-color)] flex justify-between items-center">
@@ -2210,108 +2581,133 @@ export default function App() {
               transition={{ duration: 0.3 }}
               className="py-14"
             >
-              <div className="max-w-7xl mx-auto px-6 space-y-10">
+              <div className="max-w-7xl mx-auto px-6 space-y-12">
                 
                 {/* Header */}
                 <div className="space-y-2 border-b border-[var(--border-color)] pb-6">
                   <div className="flex items-center gap-2 text-xs font-mono text-[var(--text-muted)]">
                     <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">Home</button>
                     <span>/</span>
-                    <span className="text-[var(--text-primary)] font-bold">Contact</span>
+                    <span className="text-[var(--text-primary)] font-bold">Contact & Support</span>
                   </div>
-                  <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">Book a Strategy Session</h1>
-                  <p className="text-sm text-[var(--text-secondary)]">Discuss your paid ad campaigns, lead generation goals, or custom landing page.</p>
+                  <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">
+                    Contact, Support & Strategy Hub
+                  </h1>
+                  <p className="text-sm text-[var(--text-secondary)] max-w-3xl leading-relaxed">
+                    Have a question, need campaign support, or want to book a 1-on-1 strategy call? Submit your request below or track an active inquiry in real-time.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
                   
-                  {/* Contact Info Left */}
+                  {/* Contact Info & SLA Badges Left */}
                   <div className="lg:col-span-5 space-y-6">
-                    <div>
+                    <div className="space-y-3">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-primary)]">
+                        <span className="w-2 h-2 rounded-full bg-[var(--text-primary)] animate-pulse"></span>
+                        <span>SLA: Response Within 2 Hours</span>
+                      </div>
                       <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] leading-tight">
-                        Grow Your Revenue Today
+                        Let's Connect & Build Your Campaign
                       </h2>
-                      <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-3 leading-relaxed">
-                        Send a direct inquiry or contact me via WhatsApp or email. Form submissions automatically record into Firebase Firestore and trigger a confirmation email via Resend (`noreply@shahidkhan.site`).
+                      <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                        Direct channel communication for paid ad audits, lead generation strategies, and immediate technical support.
                       </p>
                     </div>
 
-                    <div className="space-y-3.5 font-medium text-xs sm:text-sm">
-                      <a href="mailto:contact@shahidkhan.site" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                    <div className="space-y-3 font-medium text-xs sm:text-sm">
+                      <a href="mailto:contact@shahidkhan.site" className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-4 hover:border-[var(--text-primary)] transition-all shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center shrink-0">
                           <Mail className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-[11px] text-[var(--text-muted)]">Direct Email</p>
+                          <p className="text-[11px] text-[var(--text-muted)] font-mono uppercase font-bold">Direct Email</p>
                           <p className="font-heading font-bold text-[var(--text-primary)]">contact@shahidkhan.site</p>
                         </div>
                       </a>
 
-                      <a href="tel:+919587867559" className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5 hover:border-[var(--text-primary)] transition-all">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                      <a href="tel:+919587867559" className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-4 hover:border-[var(--text-primary)] transition-all shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center shrink-0">
                           <Phone className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-[11px] text-[var(--text-muted)]">Phone / WhatsApp</p>
+                          <p className="text-[11px] text-[var(--text-muted)] font-mono uppercase font-bold">Phone / WhatsApp 24/7</p>
                           <p className="font-heading font-bold text-[var(--text-primary)]">+91 95878 67559</p>
                         </div>
                       </a>
 
-                      <div className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-3.5">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center">
+                      <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center gap-4 shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] flex items-center justify-center shrink-0">
                           <MapPin className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-[11px] text-[var(--text-muted)]">Location</p>
+                          <p className="text-[11px] text-[var(--text-muted)] font-mono uppercase font-bold">Office Location</p>
                           <p className="font-heading font-bold text-[var(--text-primary)]">Jaipur, Rajasthan, India</p>
                         </div>
                       </div>
                     </div>
+
+                    {/* Trust Guarantee Card */}
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
+                        <span>🛡️</span>
+                        <span>100% Ad Account Transparency</span>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Full client ownership of Facebook Business Manager and Google Ads accounts. Direct payment method links with zero hidden agency markups.
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Contact Form Right */}
+                  {/* Dual Interactive Forms Right */}
                   <div className="lg:col-span-7 space-y-6">
-                    <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
+                    <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl space-y-6">
                       
-                      <div className="flex items-center justify-between mb-5">
-                        <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)]">Strategy Session Inquiry</h3>
+                      {/* Form Type Selector Header */}
+                      <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+                        <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)]">
+                          Send a Direct Message
+                        </h3>
+                        <span className="text-xs font-mono font-bold text-[var(--text-secondary)] bg-[var(--bg-primary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
+                          Ticket System Connected
+                        </span>
                       </div>
 
-                      <form onSubmit={handleContactSubmit} className="space-y-3.5">
+                      <form onSubmit={handleContactSubmit} className="space-y-4">
                         
                         {formSubmitted && (
                           <motion.div 
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold space-y-2"
+                            className="p-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-dark)] text-xs font-semibold space-y-2"
                           >
                             <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" />
-                              <span className="font-heading font-bold text-sm">Inquiry Submitted Successfully!</span>
+                              <CheckCircle2 className="w-5 h-5 shrink-0 text-[var(--text-primary)]" />
+                              <span className="font-heading font-bold text-sm text-[var(--text-primary)]">Inquiry Submitted Successfully!</span>
                             </div>
                             {submittedTicketId && (
-                              <div className="p-3 rounded-xl bg-[var(--bg-primary)] border border-emerald-500/20 flex flex-wrap items-center justify-between gap-2">
+                              <div className="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex flex-wrap items-center justify-between gap-2">
                                 <div>
-                                  <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Your Tracking Ticket ID:</p>
+                                  <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Your Unique Ticket ID:</p>
                                   <p className="font-mono text-base font-extrabold text-[var(--text-primary)]">#{submittedTicketId}</p>
                                 </div>
-                                <span className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-[var(--btn-bg)] text-[var(--btn-text)]">
                                   Save this Ticket ID to track live updates!
                                 </span>
                               </div>
                             )}
-                            <p className="text-[11px] text-[var(--text-secondary)]">A confirmation email with your Ticket ID has been sent from <strong>noreply@shahidkhan.site</strong>.</p>
+                            <p className="text-[11px] text-[var(--text-secondary)]">A confirmation notification with your Ticket ID has been generated. You can track status anytime using the Ticket Tracker below.</p>
                           </motion.div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Name *</label>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Your Full Name *</label>
                             <input 
                               type="text" 
                               name="name" 
                               required 
-                              placeholder="Shahid Khan" 
+                              placeholder="Enter your full name..." 
                               className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                             />
                           </div>
@@ -2328,7 +2724,7 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Phone / WhatsApp *</label>
                             <input 
@@ -2341,7 +2737,7 @@ export default function App() {
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Business Name</label>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Company / Brand Name</label>
                             <input 
                               type="text" 
                               name="businessName" 
@@ -2351,31 +2747,33 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Marketing Service *</label>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Inquiry Category *</label>
                             <select 
                               name="serviceRequired"
                               required
                               className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                             >
-                              <option value="">Select Primary Goal...</option>
+                              <option value="">Select Category / Goal...</option>
+                              <option value="Contact, Support & Suggestions">Contact, Support & Suggestions</option>
                               <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
                               <option value="Google Ads (Search & PMax)">Google Ads (Search & PMax)</option>
                               <option value="Lead Generation & Sales Funnels">Lead Generation & Sales Funnels</option>
                               <option value="High-Converting Landing Page">High-Converting Landing Page</option>
                               <option value="Meta Pixel & GA4 Setup">Meta Pixel & GA4 Setup</option>
                               <option value="NGO Campaign & Payment Portal">NGO Campaign & Payment Portal</option>
+                              <option value="Other (Custom Marketing Requirement)">Other (Custom Marketing Requirement)</option>
                             </select>
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget</label>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget (If Strategy)</label>
                             <select 
                               name="budget"
                               className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                             >
-                              <option value="Flexible">Flexible / Discuss Strategy</option>
+                              <option value="Flexible / Support Request">Flexible / Support Request</option>
                               <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
                               <option value="₹30,000 - ₹75,000">₹30,000 - ₹75,000 / month</option>
                               <option value="₹75,000+">₹75,000+ / month</option>
@@ -2384,12 +2782,12 @@ export default function App() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Project Details *</label>
+                          <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Message / Project Details *</label>
                           <textarea 
-                            rows={3} 
+                            rows={4} 
                             name="message" 
                             required 
-                            placeholder="Tell me about your product, current ad campaigns, or lead generation goals..." 
+                            placeholder="Provide your query, feedback, suggestion, or current ad campaign details..." 
                             className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"
                           ></textarea>
                         </div>
@@ -2397,9 +2795,9 @@ export default function App() {
                         <button 
                           type="submit" 
                           disabled={submitting}
-                          className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md"
+                          className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md border border-[var(--border-dark)]"
                         >
-                          <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
+                          <span>{submitting ? 'Submitting Inquiry...' : 'Submit Inquiry & Generate Ticket ↗'}</span>
                         </button>
 
                       </form>
@@ -2411,7 +2809,7 @@ export default function App() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-heading font-bold text-base text-[var(--text-primary)]">Track Your Inquiry Status</h4>
-                          <p className="text-xs text-[var(--text-secondary)]">Enter your Ticket ID (e.g. #SK-93821) or Email address to view live status updates.</p>
+                          <p className="text-xs text-[var(--text-secondary)]">Enter your Ticket ID (e.g. #SK-93821) or Email address to view live updates from Shahid Khan.</p>
                         </div>
                       </div>
 
@@ -2435,7 +2833,7 @@ export default function App() {
                       {trackingSearched && (
                         <div className="pt-3 border-t border-[var(--border-color)]">
                           {!trackedResult ? (
-                            <p className="text-xs text-red-500 font-semibold italic">No inquiry found matching "{trackingInput}". Please check your Ticket ID or Email.</p>
+                            <p className="text-xs font-semibold text-[var(--text-primary)] italic">No inquiry found matching "{trackingInput}". Please verify your Ticket ID or Email.</p>
                           ) : (
                             <div className="p-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3">
                               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-color)] pb-2.5">
@@ -2443,19 +2841,14 @@ export default function App() {
                                   <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Ticket ID</span>
                                   <p className="font-mono text-base font-extrabold text-[var(--text-primary)]">#{trackedResult.ticketId || trackedResult.id}</p>
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-heading font-extrabold uppercase border ${
-                                  trackedResult.status === 'Closed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
-                                  trackedResult.status === 'Replied' ? 'bg-purple-500/10 text-purple-600 border-purple-500/30' :
-                                  trackedResult.status === 'In Progress' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
-                                  'bg-blue-500/10 text-blue-600 border-blue-500/30'
-                                }`}>
-                                  ● {trackedResult.status || 'Open'}
+                                <span className="px-3 py-1 rounded-full text-xs font-heading font-extrabold uppercase border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)]">
+                                  ● Status: {trackedResult.status || 'Open'}
                                 </span>
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[var(--text-secondary)]">
                                 <p><strong>Name:</strong> {trackedResult.name}</p>
-                                <p><strong>Service:</strong> {trackedResult.serviceRequired || 'Digital Marketing'}</p>
+                                <p><strong>Category:</strong> {trackedResult.serviceRequired || 'General Inquiry'}</p>
                                 <p><strong>Submitted:</strong> {trackedResult.dateFormatted || trackedResult.createdAt}</p>
                                 <p><strong>Last Updated:</strong> {trackedResult.updatedAt || 'Pending Review'}</p>
                               </div>
@@ -2463,14 +2856,14 @@ export default function App() {
                               {/* Admin Replies History Timeline */}
                               {trackedResult.replies && trackedResult.replies.length > 0 && (
                                 <div className="space-y-2 pt-2 border-t border-[var(--border-color)]">
-                                  <p className="text-[11px] font-heading font-bold text-[var(--text-primary)] uppercase">Official Updates from Shahid Khan:</p>
+                                  <p className="text-[11px] font-heading font-bold text-[var(--text-primary)] uppercase">Updates from Shahid Khan:</p>
                                   {trackedResult.replies.map((r, i) => (
                                     <div key={i} className="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs space-y-1">
                                       <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
                                         <span className="font-bold text-[var(--text-primary)]">{r.sender || 'Shahid Khan'}</span>
                                         <span>{r.dateFormatted}</span>
+                                        <p className="text-[var(--text-primary)] font-medium">{r.text}</p>
                                       </div>
-                                      <p className="text-[var(--text-primary)] font-medium">{r.text}</p>
                                     </div>
                                   ))}
                                 </div>
@@ -2485,9 +2878,69 @@ export default function App() {
 
                 </div>
 
+                {/* PRE-CALL CONSULTATION CHECKLIST & STRATEGY FAQ */}
+                <div className="space-y-8 pt-8 border-t border-[var(--border-color)]">
+                  <div className="text-center max-w-2xl mx-auto space-y-2">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[var(--text-primary)] font-extrabold px-3 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)]">
+                      PRE-CALL PREPARATION
+                    </span>
+                    <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">
+                      What to Prepare Before Reaching Out
+                    </h2>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      To help us provide the fastest, most relevant solution for your inquiry, keep these handy:
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-xs border border-[var(--border-color)]">
+                        1
+                      </div>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Current Campaign Goals</h4>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Whether you need immediate leads, website sales, or technical Meta CAPI setup.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-xs border border-[var(--border-color)]">
+                        2
+                      </div>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Target Audience Profile</h4>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Demographics, geographical locations, and target customer interests.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-xs border border-[var(--border-color)]">
+                        3
+                      </div>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Monthly Budget Range</h4>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Your intended monthly ad spend budget for Meta Ads or Google Search.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2 shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center font-bold text-xs border border-[var(--border-color)]">
+                        4
+                      </div>
+                      <h4 className="font-heading font-bold text-sm text-[var(--text-primary)]">Active Landing Page URL</h4>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Your website or store link for instant Conversion Rate Optimization (CRO) review.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="pt-6 border-t border-[var(--border-color)] flex justify-between items-center">
                   <button onClick={() => navigateTo('home')} className="text-xs font-heading font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 cursor-pointer">
                     <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+                  </button>
+                  <button onClick={() => navigateTo('services')} className="text-xs font-heading font-bold text-[var(--text-primary)] flex items-center gap-1 cursor-pointer hover:underline">
+                    View All Services <ArrowUpRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
@@ -3590,70 +4043,127 @@ export default function App() {
               </button>
 
               <div className="space-y-2">
-                <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  {demoModalType === 'Book a Demo' ? '⚡ LIVE STRATEGY DEMO' : '📞 DIRECT PHONE CALLBACK'}
+                <span className="px-3 py-1 rounded-full text-[10px] font-mono uppercase font-bold bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-color)]">
+                  📞 DIRECT PHONE CALLBACK
                 </span>
                 <h2 className="font-display text-2xl font-extrabold">
-                  {demoModalType === 'Book a Demo' ? 'Book a Live Campaign Demo' : 'Request an Immediate Call Back'}
+                  Request an Immediate Call Back
                 </h2>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                   Fill your details below. Shahid Khan will contact you directly to discuss your ad strategy and campaign goals.
                 </p>
               </div>
 
-              <form onSubmit={handleDemoSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Full Name *</label>
-                  <input 
-                    type="text" 
-                    name="demoName"
-                    required
-                    placeholder="Enter your full name..."
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
-                  />
+              <form onSubmit={handleDemoSubmit} className="space-y-3.5 max-h-[65vh] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Full Name *</label>
+                    <input 
+                      type="text" 
+                      name="demoName"
+                      required
+                      placeholder="Enter your full name..."
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
+                    <input 
+                      type="email" 
+                      name="demoEmail"
+                      required
+                      placeholder="name@company.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Mobile / WhatsApp *</label>
+                    <input 
+                      type="tel" 
+                      name="demoPhone"
+                      required
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Company / Brand Name</label>
+                    <input 
+                      type="text" 
+                      name="demoCompany"
+                      placeholder="Company or Brand Name"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Company Website (If Have)</label>
+                    <input 
+                      type="url" 
+                      name="demoWebsite"
+                      placeholder="https://yourwebsite.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Monthly Ad Budget *</label>
+                    <select 
+                      name="demoBudget"
+                      required
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                    >
+                      <option value="Flexible / Audit">Flexible / Strategy Audit</option>
+                      <option value="₹15,000 - ₹30,000">₹15,000 - ₹30,000 / month</option>
+                      <option value="₹30,000 - ₹75,000">₹30,000 - ₹75,000 / month</option>
+                      <option value="₹75,000+">₹75,000+ / month</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email Address *</label>
-                  <input 
-                    type="email" 
-                    name="demoEmail"
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Required Service *</label>
+                  <select 
+                    name="demoService"
                     required
-                    placeholder="name@company.com"
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
-                  />
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                  >
+                    <option value="Meta Ads Campaign (FB & IG)">Meta Ads Campaign (FB & IG)</option>
+                    <option value="Google Ads (Search & PMax)">Google Ads (Search & PMax)</option>
+                    <option value="Lead Generation & Sales Funnels">Lead Generation & Sales Funnels</option>
+                    <option value="High-Converting Landing Page">High-Converting Landing Page</option>
+                    <option value="Meta Pixel & GA4 Setup">Meta Pixel & GA4 Setup</option>
+                    <option value="NGO Campaign & Payment Portal">NGO Campaign & Payment Portal</option>
+                    <option value="Other (Custom Marketing Requirement)">Other (Custom Marketing Requirement)</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Mobile Number / WhatsApp *</label>
-                  <input 
-                    type="tel" 
-                    name="demoPhone"
-                    required
-                    placeholder="+91 98765 43210"
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Preferred Time / Strategy Note (Optional)</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Preferred Call Time / Notes (Optional)</label>
+                  <textarea 
+                    rows={2}
                     name="demoNote"
-                    placeholder="e.g. Morning call / Meta Ads Audit request..."
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
-                  />
+                    placeholder="e.g. Morning call preference / Meta Ads Audit request..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                  ></textarea>
                 </div>
 
                 <button
                   type="submit"
                   disabled={demoSubmitting}
-                  className="w-full py-4 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 border border-[var(--border-dark)]"
                 >
                   {demoSubmitting ? (
                     <span>Submitting Request...</span>
                   ) : (
-                    <span>{demoModalType === 'Book a Demo' ? 'Confirm & Book Demo 🚀' : 'Request Call Back Now 📞'}</span>
+                    <span>Request Call Back Now 📞</span>
                   )}
                 </button>
               </form>

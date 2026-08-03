@@ -1,4 +1,5 @@
 {
+  "name": "shahidkhan",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

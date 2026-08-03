@@ -42,3 +42,5 @@ temp_light.html
 test_screenshot.py
 *.png
 *.jpg
+
+.vercel
