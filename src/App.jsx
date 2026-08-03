@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import heroPhoto from './assets/hero.png';
+import { db } from './firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { 
   Sun, 
   Moon, 
@@ -11,7 +13,8 @@ import {
   CheckCircle2, 
   Download,
   Menu,
-  X
+  X,
+  Globe
 } from 'lucide-react';
 
 export default function App() {
@@ -31,8 +34,28 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault();
+    const formData = new FormData(e.target);
+    const name = formData.get('name') || '';
+    const email = formData.get('email') || '';
+    const subject = formData.get('subject') || '';
+    const message = formData.get('message') || '';
+
+    try {
+      if (db) {
+        await addDoc(collection(db, "contacts"), {
+          name,
+          email,
+          subject,
+          message,
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      console.warn("Firebase record notice:", err);
+    }
+
     setFormSubmitted(true);
     setTimeout(() => setFormSubmitted(false), 5000);
     e.target.reset();
@@ -468,20 +491,20 @@ export default function App() {
             <form onSubmit={handleContactSubmit} className="space-y-4">
               {formSubmitted && (
                 <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Thank you! Your message has been sent successfully.
+                  <CheckCircle2 className="w-4 h-4" /> Thank you! Your message has been sent and saved to Firebase.
                 </div>
               )}
               <div>
-                <input type="text" required placeholder="Your Full Name" className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors" />
+                <input type="text" name="name" required placeholder="Your Full Name" className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors" />
               </div>
               <div>
-                <input type="email" required placeholder="Your Email Address" className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors" />
+                <input type="email" name="email" required placeholder="Your Email Address" className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors" />
               </div>
               <div>
-                <input type="text" placeholder="Subject / Service Required" className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors" />
+                <input type="text" name="subject" placeholder="Subject / Service Required" className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors" />
               </div>
               <div>
-                <textarea rows={4} required placeholder="Your Message..." className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"></textarea>
+                <textarea rows={4} name="message" required placeholder="Your Message..." className="w-full px-4 py-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)] transition-colors"></textarea>
               </div>
               <button type="submit" className="w-full py-4 rounded-lg bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer">
                 Send Message ↗

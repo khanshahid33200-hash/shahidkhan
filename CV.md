@@ -1,7 +1,7 @@
 # SHAHID KHAN
 **Digital Marketing**
 
-📍 Jaipur, Rajasthan, India | 📞 +91 9587867559 | ✉️ contact@shahidkhan.site | 🔗 LinkedIn
+📍 Jaipur, Rajasthan, India | 📞 +91 9587867559 | ✉️ contact@shahidkhan.site | 🌐 [shahidkhan.site](https://shahidkhan.site)
 
 ---
 
@@ -13,10 +13,10 @@ Results-driven Digital Marketing Specialist and AI-driven Web Developer with ext
 ## CORE SKILLS & TOOLS
 
 * **Digital Marketing & Paid Ads:** Meta Ads (FB & IG), Google Ads (Search, Display, PMax), SEO (Search Engine Optimization), B2B/B2C Lead Generation, Social Media Marketing (SMM), Campaign Optimization, ROAS Scaling
-* **Analytics & Marketing Tech:** Google Analytics 4 (GA4), Meta Pixel & Event Tracking, Razorpay (Payment Gateway Integration), CRM Implementation, Sales Funnels
+* **Analytics & Marketing Tech:** Google Analytics 4 (GA4), Meta Pixel & Event Tracking, Razorpay (Payment Gateway Integration), Firebase Integration, CRM Implementation, Sales Funnels
 * **AI & Automation Tools:** Antigravity, ChatGPT, Claude AI, Prompt Engineering, n8n Automation, Workflow Automation, AI Copywriting & Lead Nurturing
 * **Technical & Web Tools:** HTML5, CSS3, JavaScript, Firebase, Supabase, GitHub, Cloudflare, VS Code, Canva (High-Converting Ad Creatives & Banners)
-* **Business & Strategy:** CRM Management, Client Communication, Project Management, Customer Support, Brand Positioning
+* **Business & Strategy:** CRM Management, Client Communication, Project Management, Customer Support & Operations, Brand Positioning
 
 ---
 
@@ -30,7 +30,7 @@ Results-driven Digital Marketing Specialist and AI-driven Web Developer with ext
 * **Media Levelling** *(Agency Website: [media-levelling.com](https://media-levelling.com))*
   * Rebuilt and maintained agency website with optimized user experience and performance tracking.
   * Executed multi-channel paid ad campaigns for agency clients and managed lead distribution channels.
-  * Provided ongoing technical website support, performance monitoring, and client account management.
+  * Provided technical website support, performance monitoring, and client account support.
 
 * **Shree Jagdamba Furniture, Jaipur**
   * Developed full business website with online booking, product catalog, and ordering workflows.
@@ -49,8 +49,8 @@ Results-driven Digital Marketing Specialist and AI-driven Web Developer with ext
 
 * **Radhey Krishna Sports Shop**
   * Developed interactive showroom website showcasing product catalog and store location details.
-  * Executed hyper-local social media advertising campaigns on Meta/Instagram to drive store walk-ins.
-  * Generated consistent local customer leads, inquiries, and brand engagement.
+  * Executed hyper-local social media advertising campaigns on Meta/Instagram to drive store footfalls.
+  * Generated consistent local customer inquiries and brand engagement.
 
 * **Additional Client Projects**
   * Built custom business websites, high-converting landing pages, and lead capture forms.
