@@ -126,8 +126,8 @@ const AnimatedCounter = ({ target, suffix = "" }) => {
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
-// Resend Automated Confirmation Email Trigger Function
-const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceRequired) => {
+// Resend Automated Confirmation & Ticket Update Email Trigger Function
+const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceRequired, ticketId, type = 'confirmation', ticketStatus = 'Open', replyMessage = '') => {
   const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
 
   try {
@@ -135,11 +135,19 @@ const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceReq
     const apiRes = await fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: visitorName, email: visitorEmail, serviceRequired })
+      body: JSON.stringify({ 
+        type, 
+        name: visitorName, 
+        email: visitorEmail, 
+        serviceRequired, 
+        ticketId, 
+        ticketStatus, 
+        replyMessage 
+      })
     });
 
     if (apiRes.ok) {
-      console.log("Resend email sent via serverless API!");
+      console.log("Resend ticket email sent via serverless API!");
       return;
     }
   } catch (err) {
@@ -150,6 +158,47 @@ const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceReq
 
   // 2. Direct Resend API Fallback
   try {
+    const isUpdate = type === 'update';
+    const subject = isUpdate 
+      ? `Update on your Inquiry [Ticket #${ticketId || 'SK-REQUEST'}] - Status: ${ticketStatus || 'Updated'}`
+      : `Inquiry Received [Ticket #${ticketId || 'SK-REQUEST'}] | Shahid Khan Digital Marketing`;
+
+    const htmlBody = isUpdate ? `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
+        <h2 style="color: #111827; margin-bottom: 12px; font-size: 20px;">Inquiry Update - Ticket #${ticketId}</h2>
+        <p style="font-size: 15px; color: #4b5563;">Hi ${visitorName},</p>
+        <p style="font-size: 15px; color: #4b5563;">There is an official status update regarding your request for <strong>${serviceRequired || 'digital marketing strategy'}</strong>.</p>
+        <div style="margin: 18px 0; padding: 16px; background-color: #f9fafb; border-radius: 12px; border-left: 4px solid #111827;">
+          <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: bold; color: #6b7280;">NEW TICKET STATUS</p>
+          <p style="margin: 0 0 12px 0; font-size: 16px; font-weight: bold; color: #111827;">${ticketStatus}</p>
+          ${replyMessage ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #1f2937;"><strong>Message from Shahid Khan:</strong> ${replyMessage}</p>` : ''}
+        </div>
+        <p style="font-size: 13px; color: #6b7280;">Track your ticket live on our website using Ticket ID: <strong>#${ticketId}</strong></p>
+        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <div style="font-size: 13px; color: #6b7280;">
+          <p style="margin: 0; font-weight: bold; color: #111827;">Shahid Khan</p>
+          <p style="margin: 4px 0;">Digital Marketer & Growth Specialist</p>
+        </div>
+      </div>
+    ` : `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
+        <h2 style="color: #111827; margin-bottom: 12px; font-size: 20px;">Hi ${visitorName},</h2>
+        <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
+          Thank you for reaching out regarding <strong>${serviceRequired || 'your business growth goals'}</strong>.
+        </p>
+        <div style="margin: 18px 0; padding: 16px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb;">
+          <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: bold; color: #6b7280;">YOUR TRACKING TICKET ID</p>
+          <p style="margin: 0; font-size: 20px; font-family: monospace; font-weight: bold; color: #111827;">#${ticketId}</p>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #6b7280;">Use this Ticket ID anytime on our site to track your request status live!</p>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <div style="font-size: 13px; color: #6b7280;">
+          <p style="margin: 0; font-weight: bold; color: #111827;">Shahid Khan</p>
+          <p style="margin: 4px 0;">Digital Marketer & Growth Specialist</p>
+        </div>
+      </div>
+    `;
+
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -159,32 +208,8 @@ const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceReq
       body: JSON.stringify({
         from: 'Shahid Khan <noreply@shahidkhan.site>',
         to: [visitorEmail],
-        subject: `Thank you for your Inquiry | Shahid Khan Digital Marketing`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
-            <h2 style="color: #111827; margin-bottom: 12px; font-size: 20px;">Hi ${visitorName},</h2>
-            <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
-              Thank you for reaching out and booking a digital marketing strategy session regarding <strong>${serviceRequired || 'your business growth goals'}</strong>.
-            </p>
-            <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
-              I have successfully received your inquiry and will personally review your project details. I will connect with you within 24 hours via email or WhatsApp (+91 95878 67559).
-            </p>
-            <div style="margin: 24px 0; padding: 16px; background-color: #f9fafb; border-radius: 12px; border: 1px solid #f3f4f6;">
-              <p style="margin: 0; font-size: 13px; font-weight: bold; color: #111827;">What happens next?</p>
-              <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px; color: #4b5563;">
-                <li>Review of your ad campaign goals & industry competition</li>
-                <li>Custom proposal for Meta / Google Ads & Lead Funnel architecture</li>
-                <li>Direct strategy consultation schedule</li>
-              </ul>
-            </div>
-            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-            <div style="font-size: 13px; color: #6b7280;">
-              <p style="margin: 0; font-weight: bold; color: #111827;">Shahid Khan</p>
-              <p style="margin: 4px 0;">Digital Marketer & Growth Specialist</p>
-              <p style="margin: 0;"><a href="https://shahidkhan.site" style="color: #111827; text-decoration: underline;">shahidkhan.site</a> | contact@shahidkhan.site</p>
-            </div>
-          </div>
-        `
+        subject,
+        html: htmlBody
       })
     });
     console.log("Resend direct API status:", response.status);
@@ -409,7 +434,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : defaultToolsList;
   });
 
-  // Admin Dashboard States
+  // Admin Dashboard & Ticket Tracking States
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return localStorage.getItem('admin_session') === 'true';
   });
@@ -421,6 +446,17 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
   const [loadingLeads, setLoadingLeads] = useState(false);
+
+  // Ticket Submission & Visitor Tracking States
+  const [submittedTicketId, setSubmittedTicketId] = useState('');
+  const [trackingInput, setTrackingInput] = useState('');
+  const [trackedResult, setTrackedResult] = useState(null);
+  const [trackingSearched, setTrackingSearched] = useState(false);
+
+  // Admin Reply & Status Modal States
+  const [selectedLeadForReply, setSelectedLeadForReply] = useState(null);
+  const [adminReplyMessage, setAdminReplyMessage] = useState('');
+  const [adminStatusChoice, setAdminStatusChoice] = useState('In Progress');
 
   // Editable Form States for Admin
   const [editingProject, setEditingProject] = useState(null);
@@ -566,10 +602,13 @@ export default function App() {
     const message = formData.get('message') || '';
 
     const leadId = 'lead_' + Date.now();
+    const ticketId = 'SK-' + Math.floor(10000 + Math.random() * 90000);
     const dateFormatted = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
 
     const localLead = {
       id: leadId,
+      ticketId,
+      status: "Open", // Open, In Progress, Replied, Closed
       name,
       email,
       phone,
@@ -579,7 +618,8 @@ export default function App() {
       message,
       type: "Digital Marketing Lead",
       createdAt: dateFormatted,
-      dateFormatted
+      dateFormatted,
+      replies: []
     };
 
     // 1. Instant Local Persistence & UI Feedback (Instant - No waiting!)
@@ -594,8 +634,9 @@ export default function App() {
 
     setSubmitting(false);
     setFormSubmitted(true);
+    setSubmittedTicketId(ticketId);
     formElement.reset();
-    setTimeout(() => setFormSubmitted(false), 6000);
+    setTimeout(() => setFormSubmitted(false), 10000);
 
     // 2. Background Async Firebase Firestore Upload (Non-blocking)
     if (db) {
@@ -611,9 +652,9 @@ export default function App() {
       currency: 'USD'
     });
 
-    // 4. Background Async Resend Email Dispatch
+    // 4. Background Async Resend Confirmation Email Dispatch with Ticket ID
     if (email) {
-      sendResendConfirmationEmail(name, email, serviceRequired);
+      sendResendConfirmationEmail(name, email, serviceRequired, ticketId, 'confirmation', 'Open', '');
     }
   };
 
@@ -777,6 +818,89 @@ export default function App() {
         }
       }
     }
+  };
+
+  // Admin Ticket Reply & Status Update Operation
+  const handleAdminUpdateTicket = async (e) => {
+    e.preventDefault();
+    if (!selectedLeadForReply) return;
+
+    const lead = selectedLeadForReply;
+    const replyTextClean = adminReplyMessage.trim();
+    const dateFormatted = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
+
+    const newReply = {
+      text: replyTextClean,
+      dateFormatted,
+      status: adminStatusChoice,
+      sender: "Shahid Khan (Admin)"
+    };
+
+    const updatedLeads = leadsList.map(l => {
+      if (l.id === lead.id || l.ticketId === lead.ticketId) {
+        const existingReplies = l.replies || [];
+        return {
+          ...l,
+          status: adminStatusChoice,
+          updatedAt: dateFormatted,
+          replies: replyTextClean ? [...existingReplies, newReply] : existingReplies
+        };
+      }
+      return l;
+    });
+
+    setLeadsList(updatedLeads);
+    localStorage.setItem('site_leads', JSON.stringify(updatedLeads));
+
+    if (db && lead.id && !lead.id.startsWith('lead_')) {
+      try {
+        const leadRef = doc(db, "contacts", lead.id);
+        await setDoc(leadRef, {
+          status: adminStatusChoice,
+          updatedAt: dateFormatted,
+          replies: replyTextClean ? [...(lead.replies || []), newReply] : (lead.replies || [])
+        }, { merge: true });
+      } catch (err) {
+        console.warn("Firestore lead update notice:", err);
+      }
+    }
+
+    if (lead.email) {
+      sendResendConfirmationEmail(
+        lead.name,
+        lead.email,
+        lead.serviceRequired,
+        lead.ticketId || lead.id,
+        'update',
+        adminStatusChoice,
+        replyTextClean
+      );
+    }
+
+    alert(`Ticket #${lead.ticketId || lead.id} status updated to "${adminStatusChoice}" and notification email sent to ${lead.email}!`);
+    setSelectedLeadForReply(null);
+    setAdminReplyMessage('');
+  };
+
+  // Visitor Ticket Tracking Search
+  const handleTrackTicketSearch = (e) => {
+    e.preventDefault();
+    setTrackingSearched(true);
+
+    const queryClean = trackingInput.trim().toLowerCase();
+    if (!queryClean) {
+      setTrackedResult(null);
+      return;
+    }
+
+    const found = leadsList.find(l => 
+      (l.ticketId && l.ticketId.toLowerCase() === queryClean) ||
+      (l.ticketId && ('#' + l.ticketId.toLowerCase()) === queryClean) ||
+      (l.email && l.email.toLowerCase() === queryClean) ||
+      (l.id && l.id.toLowerCase() === queryClean)
+    );
+
+    setTrackedResult(found || null);
   };
 
   const filteredProjects = activeProjectFilter === 'All' 
@@ -1924,10 +2048,12 @@ export default function App() {
                   </div>
 
                   {/* Contact Form Right */}
-                  <div className="lg:col-span-7">
+                  <div className="lg:col-span-7 space-y-6">
                     <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl">
                       
-                      <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)] mb-5">Strategy Session Inquiry</h3>
+                      <div className="flex items-center justify-between mb-5">
+                        <h3 className="font-heading font-bold text-xl sm:text-2xl text-[var(--text-primary)]">Strategy Session Inquiry</h3>
+                      </div>
 
                       <form onSubmit={handleContactSubmit} className="space-y-3.5">
                         
@@ -1935,10 +2061,24 @@ export default function App() {
                           <motion.div 
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2"
+                            className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold space-y-2"
                           >
-                            <CheckCircle2 className="w-4 h-4 shrink-0" />
-                            <span>Thank you! Your submission has been saved and a confirmation email was triggered via Resend (noreply@shahidkhan.site).</span>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" />
+                              <span className="font-heading font-bold text-sm">Inquiry Submitted Successfully!</span>
+                            </div>
+                            {submittedTicketId && (
+                              <div className="p-3 rounded-xl bg-[var(--bg-primary)] border border-emerald-500/20 flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                  <p className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Your Tracking Ticket ID:</p>
+                                  <p className="font-mono text-base font-extrabold text-[var(--text-primary)]">#{submittedTicketId}</p>
+                                </div>
+                                <span className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                  Save this Ticket ID to track live updates!
+                                </span>
+                              </div>
+                            )}
+                            <p className="text-[11px] text-[var(--text-secondary)]">A confirmation email with your Ticket ID has been sent from <strong>noreply@shahidkhan.site</strong>.</p>
                           </motion.div>
                         )}
 
@@ -2032,17 +2172,85 @@ export default function App() {
                           ></textarea>
                         </div>
 
-                        <button 
-                          type="submit" 
-                          disabled={submitting}
-                          className="w-full py-3.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2 shadow-md"
-                        >
-                          <span>{submitting ? 'Submitting Strategy Inquiry...' : 'Submit Marketing Inquiry ↗'}</span>
-                        </button>
-
                       </form>
 
                     </div>
+
+                    {/* Visitor Ticket Tracking Card */}
+                    <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-md space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-heading font-bold text-base text-[var(--text-primary)]">Track Your Inquiry Status</h4>
+                          <p className="text-xs text-[var(--text-secondary)]">Enter your Ticket ID (e.g. #SK-93821) or Email address to view live status updates.</p>
+                        </div>
+                      </div>
+
+                      <form onSubmit={handleTrackTicketSearch} className="flex gap-2">
+                        <input 
+                          type="text" 
+                          value={trackingInput}
+                          onChange={(e) => setTrackingInput(e.target.value)}
+                          placeholder="Enter Ticket ID (#SK-XXXXX) or Email..."
+                          required
+                          className="flex-1 px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs sm:text-sm font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--text-primary)]"
+                        />
+                        <button 
+                          type="submit" 
+                          className="px-4 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold cursor-pointer hover:opacity-90 transition-opacity"
+                        >
+                          Track Status
+                        </button>
+                      </form>
+
+                      {trackingSearched && (
+                        <div className="pt-3 border-t border-[var(--border-color)]">
+                          {!trackedResult ? (
+                            <p className="text-xs text-red-500 font-semibold italic">No inquiry found matching "{trackingInput}". Please check your Ticket ID or Email.</p>
+                          ) : (
+                            <div className="p-4 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-color)] pb-2.5">
+                                <div>
+                                  <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Ticket ID</span>
+                                  <p className="font-mono text-base font-extrabold text-[var(--text-primary)]">#{trackedResult.ticketId || trackedResult.id}</p>
+                                </div>
+                                <span className={`px-3 py-1 rounded-full text-xs font-heading font-extrabold uppercase border ${
+                                  trackedResult.status === 'Closed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                                  trackedResult.status === 'Replied' ? 'bg-purple-500/10 text-purple-600 border-purple-500/30' :
+                                  trackedResult.status === 'In Progress' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
+                                  'bg-blue-500/10 text-blue-600 border-blue-500/30'
+                                }`}>
+                                  ● {trackedResult.status || 'Open'}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[var(--text-secondary)]">
+                                <p><strong>Name:</strong> {trackedResult.name}</p>
+                                <p><strong>Service:</strong> {trackedResult.serviceRequired || 'Digital Marketing'}</p>
+                                <p><strong>Submitted:</strong> {trackedResult.dateFormatted || trackedResult.createdAt}</p>
+                                <p><strong>Last Updated:</strong> {trackedResult.updatedAt || 'Pending Review'}</p>
+                              </div>
+
+                              {/* Admin Replies History Timeline */}
+                              {trackedResult.replies && trackedResult.replies.length > 0 && (
+                                <div className="space-y-2 pt-2 border-t border-[var(--border-color)]">
+                                  <p className="text-[11px] font-heading font-bold text-[var(--text-primary)] uppercase">Official Updates from Shahid Khan:</p>
+                                  {trackedResult.replies.map((r, i) => (
+                                    <div key={i} className="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs space-y-1">
+                                      <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
+                                        <span className="font-bold text-[var(--text-primary)]">{r.sender || 'Shahid Khan'}</span>
+                                        <span>{r.dateFormatted}</span>
+                                      </div>
+                                      <p className="text-[var(--text-primary)] font-medium">{r.text}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                   </div>
 
                 </div>
@@ -2169,6 +2377,64 @@ export default function App() {
                         <span className="text-xs text-[var(--text-muted)] font-mono">Auto-saved via Firestore + Resend Email</span>
                       </div>
 
+                      {/* Admin Reply & Status Modal */}
+                      {selectedLeadForReply && (
+                        <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl space-y-4">
+                          <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                            <div>
+                              <h3 className="font-heading font-bold text-lg text-[var(--text-primary)]">Reply & Update Ticket #{selectedLeadForReply.ticketId || selectedLeadForReply.id}</h3>
+                              <p className="text-xs text-[var(--text-secondary)]">Client: {selectedLeadForReply.name} ({selectedLeadForReply.email})</p>
+                            </div>
+                            <button onClick={() => setSelectedLeadForReply(null)} className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer">
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          <form onSubmit={handleAdminUpdateTicket} className="space-y-4">
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Ticket Status *</label>
+                              <select 
+                                value={adminStatusChoice}
+                                onChange={(e) => setAdminStatusChoice(e.target.value)}
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-bold text-[var(--text-primary)] focus:outline-none"
+                              >
+                                <option value="Open">● Open (New Inquiry Received)</option>
+                                <option value="In Progress">● In Progress (Reviewing Campaign Setup)</option>
+                                <option value="Replied">● Replied (Proposal Sent via Email)</option>
+                                <option value="Closed">● Closed (Resolved / Consultation Complete)</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Admin Reply Message to Client (Will trigger automated email update)</label>
+                              <textarea 
+                                rows={4}
+                                value={adminReplyMessage}
+                                onChange={(e) => setAdminReplyMessage(e.target.value)}
+                                placeholder="Type official response, proposal summary, or next steps for the client..."
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs text-[var(--text-primary)] focus:outline-none"
+                              ></textarea>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                              <button 
+                                type="button" 
+                                onClick={() => setSelectedLeadForReply(null)}
+                                className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-bold text-[var(--text-secondary)] cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                              <button 
+                                type="submit" 
+                                className="px-5 py-2.5 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-heading font-bold cursor-pointer shadow-md"
+                              >
+                                Send Reply & Notify Client via Email ↗
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
                       {leadsList.length === 0 ? (
                         <div className="p-12 text-center rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
                           <Inbox className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
@@ -2181,13 +2447,33 @@ export default function App() {
                             <div key={lead.id || idx} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
                               <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--border-color)] pb-3">
                                 <div>
-                                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{lead.name}</h3>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{lead.name}</h3>
+                                    <span className="font-mono text-xs font-bold text-[var(--text-muted)]">#{lead.ticketId || 'SK-REQUEST'}</span>
+                                  </div>
                                   <p className="text-xs font-mono text-[var(--text-muted)]">{lead.email} • {lead.phone} • <span className="text-[10px] text-[var(--text-secondary)]">{lead.dateFormatted || lead.createdAt}</span></p>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                    {lead.serviceRequired || 'Lead Inquiry'}
+                                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono uppercase font-bold border ${
+                                    lead.status === 'Closed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                                    lead.status === 'Replied' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' :
+                                    lead.status === 'In Progress' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+                                    'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                  }`}>
+                                    ● {lead.status || 'Open'}
                                   </span>
+
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedLeadForReply(lead);
+                                      setAdminStatusChoice(lead.status || 'In Progress');
+                                      setAdminReplyMessage('');
+                                    }}
+                                    className="px-3 py-1.5 rounded-lg bg-[var(--btn-bg)] text-[var(--btn-text)] text-xs font-bold cursor-pointer"
+                                  >
+                                    Reply / Update
+                                  </button>
+
                                   <button 
                                     onClick={() => handleDeleteLead(lead.id)}
                                     className="p-1.5 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-bold cursor-pointer"
@@ -2206,6 +2492,22 @@ export default function App() {
                               <p className="text-xs text-[var(--text-primary)] bg-[var(--bg-primary)] p-3 rounded-xl border border-[var(--border-color)] italic">
                                 "{lead.message}"
                               </p>
+
+                              {/* History of Admin Replies */}
+                              {lead.replies && lead.replies.length > 0 && (
+                                <div className="space-y-1.5 pt-2 border-t border-[var(--border-color)]">
+                                  <p className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Sent Reply History:</p>
+                                  {lead.replies.map((r, ri) => (
+                                    <div key={ri} className="p-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs space-y-0.5">
+                                      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)]">
+                                        <span className="font-bold text-[var(--text-primary)]">{r.sender || 'Admin'} ({r.status})</span>
+                                        <span>{r.dateFormatted}</span>
+                                      </div>
+                                      <p className="text-[var(--text-secondary)]">{r.text}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
