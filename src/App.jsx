@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import heroPhoto from './assets/hero.png';
 import { db } from './firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { initMetaPixel, trackPixelEvent } from './metaPixel';
 import { 
   Sun, 
   Moon, 
@@ -30,6 +31,10 @@ export default function App() {
     localStorage.setItem('portfolio_theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    initMetaPixel();
+  }, []);
+
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
@@ -55,6 +60,13 @@ export default function App() {
     } catch (err) {
       console.warn("Firebase record notice:", err);
     }
+
+    // Track Meta Pixel Lead event
+    trackPixelEvent('Lead', {
+      content_name: 'Portfolio Contact Form',
+      value: 1.00,
+      currency: 'USD'
+    });
 
     setFormSubmitted(true);
     setTimeout(() => setFormSubmitted(false), 5000);
