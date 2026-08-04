@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'fra
 import heroPhoto from './assets/hero.png';
 import { db, auth } from './firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { initMetaPixel, trackPixelEvent } from './metaPixel';
 import { 
   Sun, 
@@ -133,7 +133,7 @@ const AnimatedCounter = ({ target, suffix = "" }) => {
 
 // Resend Automated Confirmation & Ticket Update Email Trigger Function
 const sendResendConfirmationEmail = async (visitorName, visitorEmail, serviceRequired, ticketId, type = 'confirmation', ticketStatus = 'Open', replyMessage = '') => {
-  const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || (['re_', 'F54Q6X4n_', 'CxUoUzDpWaU5ycMvawh6hAea'].join(''));
+  const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
 
   try {
     // 1. Try Vercel Serverless Endpoint
@@ -254,28 +254,48 @@ const defaultToolsList = [
 const defaultProjectsData = [
   {
     id: 1,
-    title: "Shree Jagdamba Furniture",
-    category: "Paid Advertising & Lead Gen",
-    location: "Jaipur, Rajasthan, India",
-    website: "Jaipur Retail Campaign",
-    description: "Targeted Meta Ads campaign paired with a custom web booking catalog, driving consistent high-intent local customer inquiries and direct furniture orders.",
-    fullDescription: "Developed an end-to-end digital acquisition strategy for a premier furniture manufacturer and showroom in Jaipur. Created high-converting Meta Video and Carousel Ads showcasing luxury home sofa sets, dining tables, and bedroom collections targeted at homeowners within a 35km radius. Integrated a fast web booking catalog with automated WhatsApp inquiry routing.",
+    title: "Day Foundation",
+    category: "NGO Marketing & Growth",
+    location: "Jabalpur, MP, India",
+    website: "dayfoundation.in",
+    description: "Multi-channel volunteer recruitment and fundraising campaigns combined with a volunteer & internship registration portal.",
+    fullDescription: "Built a comprehensive online volunteer recruitment and fundraising portal for Day Foundation. Engineered an interactive multi-step registration workflow that allowed students and young professionals across India to apply for internships, sign up for social drives, and contribute to cause-based campaigns.",
     strategy: [
-      "Hyper-local Geo-targeting within Jaipur (35km radius around showroom)",
-      "Lookalike Audiences built from high-value past customers",
-      "Meta Click-to-WhatsApp direct lead funnel for instant customer inquiries",
-      "A/B tested promotional ad creative banners during festive buying seasons"
+      "Instagram & Facebook Lead Form ads targeting youth, college students, and young professionals",
+      "Automated Firebase Firestore database for instant candidate sorting and status tracking",
+      "Razorpay online donation integration for micro-fundraising campaigns"
     ],
     results: [
-      "100+ High-intent furniture buyer inquiries generated in 60 days",
-      "4.2x Return on Ad Spend (ROAS) on Meta paid campaigns",
-      "20% Increase in direct showroom footfall and offline sales conversions"
+      "450+ Verified volunteers and interns recruited nationwide",
+      "Expanded organizational operations to over 3 Indian cities",
+      "Saved 20+ hours per week in manual volunteer application sorting via database automation"
     ],
-    services: ["Meta Advertising", "Lead Generation", "Business Website", "Online Booking", "CRM Setup"],
-    link: ""
+    services: ["Fundraising Campaigns", "Volunteer Recruitment", "Internship Portal", "Payment Integration"],
+    link: "https://dayfoundation.in"
   },
   {
     id: 2,
+    title: "Media Levelling",
+    category: "Agency Marketing & Funnels",
+    location: "Agency Portal (Pan-India)",
+    website: "media-levelling.com",
+    description: "Comprehensive digital marketing and website redesign for a growth agency, optimizing lead distribution and client acquisition funnels.",
+    fullDescription: "Re-engineered the digital client acquisition funnel for Media Levelling, a full-service digital agency. Designed a sleek, ultra-fast agency web portal showcasing case studies and services, integrated with an n8n workflow that automatically routes inbound leads directly to sales representatives via Slack and WhatsApp.",
+    strategy: [
+      "B2B Meta & LinkedIn ad campaigns targeting business owners and marketing directors",
+      "Conversion Rate Optimization (CRO) on agency service landing pages",
+      "Automated lead scoring and instant CRM distribution system via n8n"
+    ],
+    results: [
+      "140% Increase in website visitor-to-lead conversion rate",
+      "Sales team lead response time reduced from 4 hours to under 2 minutes",
+      "Generated 80+ qualified B2B agency consultation calls"
+    ],
+    services: ["Agency Marketing", "Meta Ads", "Website Redesign", "Lead Distribution Funnel"],
+    link: "https://media-levelling.com"
+  },
+  {
+    id: 3,
     title: "Shikva Foundation",
     category: "NGO Marketing & Growth",
     location: "New Delhi, India",
@@ -297,67 +317,51 @@ const defaultProjectsData = [
     link: "https://shikvaafoundation.org"
   },
   {
-    id: 3,
-    title: "Day Foundation",
-    category: "NGO Marketing & Growth",
-    location: "Jabalpur, MP, India",
-    website: "dayfoundation.in",
-    description: "Multi-channel volunteer recruitment and fundraising campaigns combined with a volunteer & internship registration portal.",
-    fullDescription: "Built a comprehensive online volunteer recruitment and fundraising portal for Day Foundation. Engineered an interactive multi-step registration workflow that allowed students and young professionals across India to apply for internships, sign up for social drives, and contribute to cause-based campaigns.",
-    strategy: [
-      "Instagram & Facebook Lead Form ads targeting youth, college students, and young professionals",
-      "Automated Firebase Firestore database for instant candidate sorting and status tracking",
-      "Razorpay online donation integration for micro-fundraising campaigns"
-    ],
-    results: [
-      "450+ Verified volunteers and interns recruited nationwide",
-      "Expanded organizational operations to over 3 Indian cities",
-      "Saved 20+ hours per week in manual volunteer application sorting via database automation"
-    ],
-    services: ["Fundraising Campaigns", "Volunteer Recruitment", "Internship Portal", "Payment Integration"],
-    link: "https://dayfoundation.in"
-  },
-  {
     id: 4,
-    title: "Radhey Krishna Sports Shop",
+    title: "Shree Jagdamba Furniture",
     category: "Paid Advertising & Lead Gen",
     location: "Jaipur, Rajasthan, India",
-    website: "Local Showroom Lead Funnel",
-    description: "Hyper-local Meta & Instagram ads strategy driving footfalls and online inquiries for a premium local sports showroom.",
-    fullDescription: "Formulated a local retail promotion strategy for a major sports equipment and apparel retailer in Jaipur. Designed vibrant ad creatives highlighting specialized cricket gear, fitness machinery, and sportswear, coupled with limited-time discount codes claimed via WhatsApp lead forms.",
+    website: "Jaipur Retail Campaign",
+    description: "Targeted Meta Ads campaign paired with a custom web booking catalog, driving consistent high-intent local customer inquiries and direct furniture orders.",
+    fullDescription: "Developed an end-to-end digital acquisition strategy for a premier furniture manufacturer and showroom in Jaipur. Created high-converting Meta Video and Carousel Ads showcasing luxury home sofa sets, dining tables, and bedroom collections targeted at homeowners within a 35km radius. Integrated a fast web booking catalog with automated WhatsApp inquiry routing.",
     strategy: [
-      "Meta Click-to-WhatsApp ad campaigns targeting sports & fitness enthusiasts",
-      "Interest-based audience segmentation (Cricket gear, Gym equipment, Sports apparel)",
-      "Exclusive discount code lead generation landing page"
+      "Hyper-local Geo-targeting within Jaipur (35km radius around showroom)",
+      "Lookalike Audiences built from high-value past customers",
+      "Meta Click-to-WhatsApp direct lead funnel for instant customer inquiries",
+      "A/B tested promotional ad creative banners during festive buying seasons"
     ],
     results: [
-      "450+ Verified customer leads generated with Cost Per Lead (CPL) under ₹28",
-      "₹3.5 Lakh+ Additional showroom revenue generated within 45 days",
-      "Built an active WhatsApp customer marketing list of 1,000+ local buyers"
+      "100+ High-intent furniture buyer inquiries generated in 60 days",
+      "4.2x Return on Ad Spend (ROAS) on Meta paid campaigns",
+      "20% Increase in direct showroom footfall and offline sales conversions"
     ],
-    services: ["Meta Ads", "Hyper-Local Marketing", "Brand Promotion", "Lead Generation"],
+    services: ["Meta Advertising", "Lead Generation", "Business Website", "Online Booking", "CRM Setup"],
     link: ""
   },
   {
     id: 5,
-    title: "Media Levelling",
-    category: "Agency Marketing & Funnels",
-    location: "Agency Portal (Pan-India)",
-    website: "media-levelling.com",
-    description: "Comprehensive digital marketing and website redesign for a growth agency, optimizing lead distribution and client acquisition funnels.",
-    fullDescription: "Re-engineered the digital client acquisition funnel for Media Levelling, a full-service digital agency. Designed a sleek, ultra-fast agency web portal showcasing case studies and services, integrated with an n8n workflow that automatically routes inbound leads directly to sales representatives via Slack and WhatsApp.",
+    title: "Manav Nimesh — Personal Tutor",
+    category: "Education & Teaching Services",
+    location: "Online (Pan-India)",
+    website: "manav.rawbyteproduction.online",
+    description: "A highly responsive teaching service website for personal tutor Manav Nimesh, featuring complete student enrollment management, visitor tracking, and an interactive tutoring portal.",
+    fullDescription: "Designed and developed a full-featured personal tutoring web platform for Manav Nimesh, a dedicated personal tutor offering one-on-one academic coaching. The website is engineered for maximum mobile responsiveness and built around a dual-management system — handling both student enrollments and general visitor inquiries from a single admin dashboard. Features include a student registration portal, session booking, subject-wise course listings, live inquiry tracking, real-time Firebase-powered CRM, and automated email confirmations for enrolled students.",
     strategy: [
-      "B2B Meta & LinkedIn ad campaigns targeting business owners and marketing directors",
-      "Conversion Rate Optimization (CRO) on agency service landing pages",
-      "Automated lead scoring and instant CRM distribution system via n8n"
+      "Fully responsive UI built with React & Vite — pixel-perfect across mobile, tablet, and desktop",
+      "Firebase Firestore-powered student management system with enrollment status tracking",
+      "Visitor inquiry management panel with ticket assignment and live status updates",
+      "Automated welcome & confirmation emails dispatched to every newly enrolled student",
+      "Interactive session booking with subject selection and schedule management",
+      "SEO-optimized landing pages targeting local tutoring & academic coaching search queries"
     ],
     results: [
-      "140% Increase in website visitor-to-lead conversion rate",
-      "Sales team lead response time reduced from 4 hours to under 2 minutes",
-      "Generated 80+ qualified B2B agency consultation calls"
+      "Highly responsive website live at manav.rawbyteproduction.online with 100% mobile compatibility",
+      "Complete student & visitor dual-management dashboard deployed for admin control",
+      "Automated enrollment confirmation system eliminating manual follow-up communication",
+      "Structured tutoring service portal with professional online presence established"
     ],
-    services: ["Agency Marketing", "Meta Ads", "Website Redesign", "Lead Distribution Funnel"],
-    link: "https://media-levelling.com"
+    services: ["Teaching Service Website", "Student Management System", "Visitor Management", "Firebase CRM", "Email Automation", "Responsive Web Design"],
+    link: "https://manav.rawbyteproduction.online"
   },
   {
     id: 6,
@@ -378,6 +382,27 @@ const defaultProjectsData = [
       "100% Client retention on monthly ad management retainers"
     ],
     services: ["Lead Generation", "Meta Ads Management", "Landing Page Design", "CRM Automation"],
+    link: ""
+  },
+  {
+    id: 7,
+    title: "Radhey Krishna Sports Shop",
+    category: "Paid Advertising & Lead Gen",
+    location: "Jaipur, Rajasthan, India",
+    website: "Local Showroom Lead Funnel",
+    description: "Hyper-local Meta & Instagram ads strategy driving footfalls and online inquiries for a premium local sports showroom.",
+    fullDescription: "Formulated a local retail promotion strategy for a major sports equipment and apparel retailer in Jaipur. Designed vibrant ad creatives highlighting specialized cricket gear, fitness machinery, and sportswear, coupled with limited-time discount codes claimed via WhatsApp lead forms.",
+    strategy: [
+      "Meta Click-to-WhatsApp ad campaigns targeting sports & fitness enthusiasts",
+      "Interest-based audience segmentation (Cricket gear, Gym equipment, Sports apparel)",
+      "Exclusive discount code lead generation landing page"
+    ],
+    results: [
+      "450+ Verified customer leads generated with Cost Per Lead (CPL) under ₹28",
+      "₹3.5 Lakh+ Additional showroom revenue generated within 45 days",
+      "Built an active WhatsApp customer marketing list of 1,000+ local buyers"
+    ],
+    services: ["Meta Ads", "Hyper-Local Marketing", "Brand Promotion", "Lead Generation"],
     link: ""
   }
 ];
@@ -439,7 +464,16 @@ export default function App() {
 
   const [projectsList, setProjectsList] = useState(() => {
     const saved = localStorage.getItem('site_projects');
-    return saved ? JSON.parse(saved) : defaultProjectsData;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Version guard: if cached list is missing project #7, reset to defaults
+      if (parsed.length < defaultProjectsData.length) {
+        localStorage.removeItem('site_projects');
+        return defaultProjectsData;
+      }
+      return parsed;
+    }
+    return defaultProjectsData;
   });
 
   const [servicesData, setServicesData] = useState(() => {
@@ -453,16 +487,48 @@ export default function App() {
   });
 
   // Admin Dashboard & Ticket Tracking States
+  const ADMIN_EMAIL = 'admin@shahidkhan.site'; // Only this email can log in
+  const MAX_ATTEMPTS = 4;                       // Block after 4 wrong passwords
+  const LOCKOUT_MS   = 24 * 60 * 60 * 1000;    // 24-hour lockout duration
+  const LOCKOUT_KEY  = 'admin_lockouts';         // localStorage key
+
+  // Reads / writes per-email lockout record
+  const getLockout = (email) => {
+    try {
+      const all = JSON.parse(localStorage.getItem(LOCKOUT_KEY) || '{}');
+      return all[email] || { attempts: 0, lockedUntil: null };
+    } catch { return { attempts: 0, lockedUntil: null }; }
+  };
+  const setLockout = (email, record) => {
+    try {
+      const all = JSON.parse(localStorage.getItem(LOCKOUT_KEY) || '{}');
+      all[email] = record;
+      localStorage.setItem(LOCKOUT_KEY, JSON.stringify(all));
+    } catch {}
+  };
+  const clearLockout = (email) => {
+    try {
+      const all = JSON.parse(localStorage.getItem(LOCKOUT_KEY) || '{}');
+      delete all[email];
+      localStorage.setItem(LOCKOUT_KEY, JSON.stringify(all));
+    } catch {}
+  };
+  const formatCountdown = (ms) => {
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return `${h}h ${m}m ${s}s`;
+  };
+
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return localStorage.getItem('admin_session') === 'true';
   });
-  const [adminAuthMode, setAdminAuthMode] = useState('login'); // 'login' | 'signup'
-  const [adminEmail, setAdminEmail] = useState('');
+  const [adminEmail,    setAdminEmail]    = useState('');
   const [adminPassword, setAdminPassword] = useState('');
-  const [adminUser, setAdminUser] = useState(null);
+  const [adminUser,        setAdminUser]        = useState(null);
   const [adminAuthLoading, setAdminAuthLoading] = useState(false);
-  const [adminPasscode, setAdminPasscode] = useState('');
-  const [adminPassError, setAdminPassError] = useState(false);
+  const [adminPassError,   setAdminPassError]   = useState(false);
+  const [lockoutInfo,      setLockoutInfo]      = useState(null); // { lockedUntil, remaining }
   const [adminTab, setAdminTab] = useState('leads');
   const [leadsList, setLeadsList] = useState(() => {
     const saved = localStorage.getItem('site_leads');
@@ -853,38 +919,88 @@ export default function App() {
     );
   };
 
-  // Firebase Auth (Email & Password) & Fallback Passcode Login / Sign Up Handler
+  // Firebase Auth — Login only. Credentials managed via Firebase Console.
+  // Brute-force protection: 4 wrong passwords → 24hr block per email (client-side)
   const handleAdminFirebaseAuth = async (e) => {
     e.preventDefault();
-    setAdminAuthLoading(true);
     setAdminPassError(false);
+    setLockoutInfo(null);
 
-    try {
-      if (adminAuthMode === 'signup') {
-        const userCredential = await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
-        setAdminUser(userCredential.user);
-        setIsAdminAuthenticated(true);
-        localStorage.setItem('admin_session', 'true');
-        alert(`🎉 Admin Account Created Successfully for ${userCredential.user.email}!`);
+    const email = adminEmail.trim().toLowerCase();
+
+    // ── Step 1: Block non-admin emails immediately ──────────────────────────
+    if (email !== ADMIN_EMAIL) {
+      setAdminPassError('Access denied. Unauthorised account.');
+      return;
+    }
+
+    // ── Step 2: Check existing lockout ──────────────────────────────────────
+    const record = getLockout(email);
+    if (record.lockedUntil) {
+      const remaining = record.lockedUntil - Date.now();
+      if (remaining > 0) {
+        setLockoutInfo({ lockedUntil: record.lockedUntil, remaining });
+        setAdminPassError(
+          `Account locked. Too many failed attempts. Try again in ${formatCountdown(remaining)}.`
+        );
+        // Start a countdown ticker
+        const tick = setInterval(() => {
+          const left = record.lockedUntil - Date.now();
+          if (left <= 0) {
+            clearInterval(tick);
+            clearLockout(email);
+            setLockoutInfo(null);
+            setAdminPassError(false);
+          } else {
+            setLockoutInfo({ lockedUntil: record.lockedUntil, remaining: left });
+            setAdminPassError(
+              `Account locked. Too many failed attempts. Try again in ${formatCountdown(left)}.`
+            );
+          }
+        }, 1000);
+        return;
       } else {
-        const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-        setAdminUser(userCredential.user);
-        setIsAdminAuthenticated(true);
-        localStorage.setItem('admin_session', 'true');
+        // Lockout expired — clear it
+        clearLockout(email);
       }
+    }
+
+    // ── Step 3: Attempt Firebase Auth ───────────────────────────────────────
+    setAdminAuthLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, adminPassword);
+      // ✅ SUCCESS — clear any lockout record and log in
+      clearLockout(email);
+      setAdminUser(userCredential.user);
+      setIsAdminAuthenticated(true);
+      localStorage.setItem('admin_session', 'true');
+      setAdminPassword('');
       fetchLeads();
     } catch (err) {
-      console.warn("Firebase Auth attempt error:", err);
-      // Fallback check if user enters passcode into password or passcode field
-      if (adminPassword === 'admin123' || adminPassword === 'shahid2026' || adminPasscode === 'admin123' || adminPasscode === 'shahid2026' || adminEmail === 'admin123') {
-        setIsAdminAuthenticated(true);
-        localStorage.setItem('admin_session', 'true');
-        setAdminPassError(false);
-        fetchLeads();
+      // ❌ FAILURE — increment attempt counter
+      console.warn('Admin login error:', err.code);
+      const code = err.code || '';
+      const updatedAttempts = (record.attempts || 0) + 1;
+      const remaining = MAX_ATTEMPTS - updatedAttempts;
+
+      if (updatedAttempts >= MAX_ATTEMPTS) {
+        // 🔴 Lock the account for 24 hours
+        const lockedUntil = Date.now() + LOCKOUT_MS;
+        setLockout(email, { attempts: updatedAttempts, lockedUntil });
+        setLockoutInfo({ lockedUntil, remaining: LOCKOUT_MS });
+        setAdminPassError(
+          `Account locked for 24 hours after ${MAX_ATTEMPTS} failed attempts. Try again after ${new Date(lockedUntil).toLocaleTimeString()}.`
+        );
       } else {
-        const errMsg = err.message ? err.message.replace('Firebase: ', '').replace('Error (auth/', '').replace(').', '') : "Failed to authenticate with Firebase Auth";
+        // 🟡 Warn — show remaining attempts
+        setLockout(email, { attempts: updatedAttempts, lockedUntil: null });
+        let errMsg = `Incorrect password. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining before 24hr lockout.`;
+        if (code === 'auth/too-many-requests') errMsg = 'Too many requests. Login temporarily blocked. Try again later.';
+        else if (code === 'auth/network-request-failed') errMsg = 'Network error. Check your connection and try again.';
+        else if (code === 'auth/user-not-found' || code === 'auth/invalid-email') errMsg = 'Unrecognised credentials.';
         setAdminPassError(errMsg);
       }
+      setAdminPassword('');
     } finally {
       setAdminAuthLoading(false);
     }
@@ -896,8 +1012,12 @@ export default function App() {
     } catch (e) {}
     setIsAdminAuthenticated(false);
     setAdminUser(null);
+    setAdminEmail('');
+    setAdminPassword('');
     localStorage.removeItem('admin_session');
-    navigateTo('home');
+    // Stay on /mrshahidbabu — show login page, not public site
+    window.history.replaceState({}, '', '/mrshahidbabu');
+    setActivePage('mrshahidbabu');
   };
 
   // Project Admin Operations
@@ -952,6 +1072,16 @@ export default function App() {
       setProjectsList(updated);
       localStorage.setItem('site_projects', JSON.stringify(updated));
     }
+  };
+
+  // Move project up or down in sequence
+  const handleMoveProject = (index, direction) => {
+    const updated = [...projectsList];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= updated.length) return;
+    [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
+    setProjectsList(updated);
+    localStorage.setItem('site_projects', JSON.stringify(updated));
   };
 
   // Service Admin Operations
@@ -1187,7 +1317,8 @@ export default function App() {
         style={{ left: `${cursorPos.x}px`, top: `${cursorPos.y}px` }}
       />
 
-      {/* STICKY HEADER NAV (PUBLIC TOOLBAR - NO ADMIN LINK, REPLACED CAMPAIGN WITH PORTFOLIO) */}
+      {/* STICKY HEADER NAV — hidden on admin route */}
+      {activePage !== 'mrshahidbabu' && (
       <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[var(--header-bg)] border-b border-[var(--border-color)] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
           
@@ -1293,6 +1424,7 @@ export default function App() {
           )}
         </AnimatePresence>
       </header>
+      )} {/* end admin nav guard */}
 
 
       {/* MAIN DYNAMIC CONTENT CONTAINER */}
@@ -3076,92 +3208,107 @@ export default function App() {
               className="py-12 max-w-7xl mx-auto px-6"
             >
               {!isAdminAuthenticated ? (
-                /* FIREBASE AUTH ADMIN LOGIN & SIGNUP PORTAL */
-                <div className="max-w-md mx-auto py-8">
+                /* FIREBASE AUTH ADMIN LOGIN PORTAL */
+                <div className="max-w-sm mx-auto py-8">
                   <div className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-2xl space-y-6">
-                    
+
                     <div className="text-center space-y-2">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-800 text-white flex items-center justify-center mx-auto shadow-md">
-                        <Lock className="w-6 h-6" />
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto shadow-md ${
+                        lockoutInfo ? 'bg-red-700' : 'bg-emerald-800'
+                      } text-white`}>
+                        {lockoutInfo ? <ShieldCheck className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
                       </div>
-                      <h1 className="font-display text-2xl font-extrabold text-[var(--text-primary)]">Firebase Admin Auth</h1>
-                      <p className="text-xs text-[var(--text-secondary)]">Create username & password or login to manage growth OS.</p>
+                      <h1 className="font-display text-2xl font-extrabold text-[var(--text-primary)]">
+                        {lockoutInfo ? 'Account Locked' : 'Admin Login'}
+                      </h1>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {lockoutInfo
+                          ? 'Too many failed attempts. Access blocked for 24 hours.'
+                          : 'Enter your credentials to access the admin dashboard.'}
+                      </p>
                     </div>
 
-                    {/* Auth Mode Tabs (Sign In vs Create Account) */}
-                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-color)] text-xs font-heading font-bold text-center">
-                      <button
-                        type="button"
-                        onClick={() => { setAdminAuthMode('login'); setAdminPassError(false); }}
-                        className={`py-2 rounded-xl transition-all cursor-pointer ${
-                          adminAuthMode === 'login' 
-                            ? 'bg-emerald-800 text-white shadow-md' 
-                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                        }`}
-                      >
-                        🔑 Sign In
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setAdminAuthMode('signup'); setAdminPassError(false); }}
-                        className={`py-2 rounded-xl transition-all cursor-pointer ${
-                          adminAuthMode === 'signup' 
-                            ? 'bg-emerald-800 text-white shadow-md' 
-                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                        }`}
-                      >
-                        ✨ Create Admin
-                      </button>
-                    </div>
-
-                    <form onSubmit={handleAdminFirebaseAuth} className="space-y-4">
-                      {adminPassError && (
-                        <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center">
-                          {adminPassError}
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Admin Email / Username *</label>
-                        <input 
-                          type="email" 
-                          value={adminEmail}
-                          onChange={(e) => setAdminEmail(e.target.value)}
-                          placeholder="admin@shahidkhan.site" 
-                          required
-                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
-                        />
+                    {/* Lockout countdown banner */}
+                    {lockoutInfo && (
+                      <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-center space-y-1">
+                        <p className="text-xs font-bold text-red-500 uppercase tracking-wider">Access Blocked</p>
+                        <p className="font-mono font-extrabold text-2xl text-red-600">
+                          {formatCountdown(lockoutInfo.remaining)}
+                        </p>
+                        <p className="text-[11px] text-red-400">remaining until access is restored</p>
                       </div>
+                    )}
 
-                      <div>
-                        <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Admin Password *</label>
-                        <input 
-                          type="password" 
-                          value={adminPassword}
-                          onChange={(e) => setAdminPassword(e.target.value)}
-                          placeholder="Enter Password..." 
-                          required
-                          className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
-                        />
-                      </div>
-
-                      <button 
-                        type="submit" 
-                        disabled={adminAuthLoading}
-                        className="w-full py-3.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
-                      >
-                        {adminAuthLoading ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                        ) : adminAuthMode === 'signup' ? (
-                          'Create Firebase Admin Account ↗'
-                        ) : (
-                          'Unlock Admin Dashboard ↗'
+                    {!lockoutInfo && (
+                      <form onSubmit={handleAdminFirebaseAuth} className="space-y-4">
+                        {adminPassError && (
+                          <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center">
+                            {adminPassError}
+                          </div>
                         )}
-                      </button>
-                    </form>
+
+                        {/* Editable username (email) */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Username / Email *</label>
+                          <input
+                            type="email"
+                            value={adminEmail}
+                            onChange={(e) => { setAdminEmail(e.target.value); setAdminPassError(false); }}
+                            placeholder="Enter your username…"
+                            required
+                            autoComplete="username"
+                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                          />
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Password *</label>
+                          <input
+                            type="password"
+                            value={adminPassword}
+                            onChange={(e) => { setAdminPassword(e.target.value); setAdminPassError(false); }}
+                            placeholder="Enter your password…"
+                            required
+                            autoComplete="current-password"
+                            className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                          />
+                        </div>
+
+                        {/* Attempt counter — shown after first failure */}
+                        {(() => {
+                          const rec = getLockout(adminEmail.trim().toLowerCase());
+                          if (rec.attempts > 0 && !rec.lockedUntil) {
+                            const left = MAX_ATTEMPTS - rec.attempts;
+                            return (
+                              <div className="flex items-center justify-between text-[11px] font-mono font-bold">
+                                <span className="text-[var(--text-muted)]">Failed attempts:</span>
+                                <span className={`${
+                                  left === 1 ? 'text-red-500' : left === 2 ? 'text-amber-500' : 'text-[var(--text-muted)]'
+                                }`}>
+                                  {rec.attempts} / {MAX_ATTEMPTS} &nbsp;({left} left before 24hr lockout)
+                                </span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+
+                        <button
+                          type="submit"
+                          disabled={adminAuthLoading}
+                          className="w-full py-3.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          {adminAuthLoading
+                            ? <RefreshCw className="w-4 h-4 animate-spin" />
+                            : 'Sign In →'
+                          }
+                        </button>
+                      </form>
+                    )}
 
                     <div className="pt-2 text-center border-t border-[var(--border-color)] text-[11px] text-[var(--text-muted)] font-mono">
-                      <span>Firebase Auth Identity Engine • Passcode fallback enabled</span>
+                      <span>Secured · {MAX_ATTEMPTS} attempts max · 24hr lockout</span>
                     </div>
 
                   </div>
@@ -3682,6 +3829,7 @@ export default function App() {
                                   <option value="Paid Advertising & Lead Gen">Paid Advertising & Lead Gen</option>
                                   <option value="NGO Marketing & Growth">NGO Marketing & Growth</option>
                                   <option value="Agency Marketing & Funnels">Agency Marketing & Funnels</option>
+                                  <option value="Education & Teaching Services">Education & Teaching Services</option>
                                 </select>
                               </div>
                             </div>
@@ -3724,14 +3872,39 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Projects Table List */}
+                      {/* Projects Table List — with sequence control */}
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">Drag-free reorder: use ↑ ↓ arrows to set display sequence</span>
+                      </div>
                       <div className="grid grid-cols-1 gap-3">
-                        {projectsList.map(project => (
+                        {projectsList.map((project, index) => (
                           <div key={project.id} className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
-                              <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">{project.category}</span>
-                              <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{project.title}</h3>
-                              <p className="text-xs text-[var(--text-secondary)]">{project.description}</p>
+                            {/* Sequence badge + move buttons */}
+                            <div className="flex items-center gap-3 shrink-0">
+                              <div className="flex flex-col items-center gap-0.5">
+                                <button
+                                  onClick={() => handleMoveProject(index, 'up')}
+                                  disabled={index === 0}
+                                  title="Move Up"
+                                  className="w-6 h-6 rounded-md border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+                                </button>
+                                <span className="text-[10px] font-mono font-extrabold text-[var(--text-primary)] w-6 text-center leading-none">{index + 1}</span>
+                                <button
+                                  onClick={() => handleMoveProject(index, 'down')}
+                                  disabled={index === projectsList.length - 1}
+                                  title="Move Down"
+                                  className="w-6 h-6 rounded-md border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                </button>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-mono uppercase font-bold text-[var(--text-muted)]">{project.category}</span>
+                                <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">{project.title}</h3>
+                                <p className="text-xs text-[var(--text-secondary)] max-w-xs">{project.description.slice(0, 80)}…</p>
+                              </div>
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
