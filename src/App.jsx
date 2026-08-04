@@ -530,11 +530,55 @@ export default function App() {
   const [adminPassError,   setAdminPassError]   = useState(false);
   const [lockoutInfo,      setLockoutInfo]      = useState(null); // { lockedUntil, remaining }
   const [adminTab, setAdminTab] = useState('leads');
+
+  // ===== SEO MANAGEMENT STATE =====
+  const defaultSEOSettings = {
+    title: 'Shahid Khan — Best Digital Marketing Agency in Jaipur | Website Design, Landing Pages & Ads Expert',
+    description: 'Shahid Khan — Best Digital Marketing Agency in Jaipur. Expert in Meta Ads, Google Ads, SEO, Landing Page Design, Website Design, Website Development, Software Development, and Lead Generation. Serving businesses across Jaipur, Rajasthan & India.',
+    keywords: 'Best Digital Marketing Agency in Jaipur, Digital Marketing Expert Jaipur, Meta Ads Expert Jaipur, Google Ads Jaipur, SEO Expert Jaipur, Landing Page Maker Jaipur, Website Design Jaipur, Software Development Jaipur, Lead Generation Jaipur',
+    ogTitle: 'Shahid Khan — Best Digital Marketing Agency in Jaipur | Meta & Google Ads',
+    ogDescription: 'Jaipur-based Digital Marketing Expert helping businesses generate high-intent leads, scale ROAS, and grow revenue through Meta Ads, Google Ads, SEO, Website Design, and high-converting paid funnels.',
+    twitterTitle: 'Shahid Khan — Best Digital Marketing Agency in Jaipur',
+    twitterDescription: 'Meta Ads, Google Ads, SEO, Website Design & Lead Generation Expert in Jaipur, India.',
+    extraKeywords: '',
+  };
+  const [seoSettings, setSeoSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('site_seo_settings');
+      return saved ? { ...defaultSEOSettings, ...JSON.parse(saved) } : defaultSEOSettings;
+    } catch { return defaultSEOSettings; }
+  });
+
+  // Apply SEO settings to document <head> at runtime
+  const applySEOToDocument = (settings) => {
+    const s = settings || seoSettings;
+    // Title
+    document.title = s.title;
+    // Helper to upsert a meta tag
+    const setMeta = (selector, attr, val) => {
+      let el = document.querySelector(selector);
+      if (!el) { el = document.createElement('meta'); document.head.appendChild(el); }
+      el.setAttribute(attr, val);
+    };
+    const allKeywords = s.extraKeywords
+      ? `${s.keywords}, ${s.extraKeywords}`
+      : s.keywords;
+    setMeta('meta[name="description"]',    'content', s.description);
+    setMeta('meta[name="keywords"]',       'content', allKeywords);
+    setMeta('meta[property="og:title"]',   'content', s.ogTitle);
+    setMeta('meta[property="og:description"]', 'content', s.ogDescription);
+    setMeta('meta[name="twitter:title"]',  'content', s.twitterTitle);
+    setMeta('meta[name="twitter:description"]', 'content', s.twitterDescription);
+  };
+
   const [leadsList, setLeadsList] = useState(() => {
     const saved = localStorage.getItem('site_leads');
     return saved ? JSON.parse(saved) : [];
   });
   const [loadingLeads, setLoadingLeads] = useState(false);
+
+  // Apply SEO on initial load
+  useEffect(() => { applySEOToDocument(seoSettings); }, []);
 
   // Firebase Auth State Listener
   useEffect(() => {
@@ -3334,11 +3378,12 @@ export default function App() {
                     {/* Navigation Tabs */}
                     <div className="flex flex-wrap items-center gap-1.5 bg-[var(--bg-primary)] p-1.5 rounded-2xl border border-[var(--border-color)] text-xs font-heading font-bold">
                       {[
-                        { id: 'leads', label: `Overview & Tickets (${leadsList.length})` },
+                        { id: 'leads',    label: `Overview & Tickets (${leadsList.length})` },
                         { id: 'projects', label: `Portfolio (${projectsList.length})` },
                         { id: 'services', label: `Services (${servicesData.length})` },
-                        { id: 'tools', label: `Stack & Tools (${toolsData.length})` },
-                        { id: 'stats', label: `KPI Stats` }
+                        { id: 'tools',    label: `Stack & Tools (${toolsData.length})` },
+                        { id: 'stats',    label: `KPI Stats` },
+                        { id: 'seo',      label: `🔍 SEO Manager` }
                       ].map(tab => (
                         <button
                           key={tab.id}
@@ -4065,6 +4110,199 @@ export default function App() {
                         <button type="submit" className="px-6 py-3 rounded-xl bg-[var(--btn-bg)] text-[var(--btn-text)] font-heading text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer">
                           Update All Statistics Counters
                         </button>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* ========== SEO MANAGER TAB ========== */}
+                  {adminTab === 'seo' && (
+                    <div className="space-y-6 max-w-3xl">
+                      <div>
+                        <h2 className="font-heading font-bold text-xl text-[var(--text-primary)]">SEO Manager</h2>
+                        <p className="text-xs text-[var(--text-secondary)] mt-1">Changes apply instantly to the live site. All settings saved automatically.</p>
+                      </div>
+
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const fd = new FormData(e.target);
+                          const updated = {
+                            title:            fd.get('seo_title'),
+                            description:      fd.get('seo_description'),
+                            keywords:         fd.get('seo_keywords'),
+                            ogTitle:          fd.get('seo_ogTitle'),
+                            ogDescription:    fd.get('seo_ogDescription'),
+                            twitterTitle:     fd.get('seo_twitterTitle'),
+                            twitterDescription: fd.get('seo_twitterDescription'),
+                            extraKeywords:    fd.get('seo_extraKeywords'),
+                          };
+                          setSeoSettings(updated);
+                          localStorage.setItem('site_seo_settings', JSON.stringify(updated));
+                          applySEOToDocument(updated);
+                          alert('✅ SEO settings saved and applied to live site!');
+                        }}
+                        className="space-y-5"
+                      >
+
+                        {/* ---- Page Identity ---- */}
+                        <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
+                            <h3 className="font-heading font-bold text-sm text-[var(--text-primary)] uppercase tracking-wider">Page Identity</h3>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Site Title (shown in browser tab &amp; Google result)</label>
+                            <input
+                              name="seo_title"
+                              defaultValue={seoSettings.title}
+                              required
+                              maxLength={70}
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                            />
+                            <p className="text-[10px] text-[var(--text-muted)] mt-1">Recommended: 50–60 characters. Include your main keyword + location.</p>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Meta Description (shown below title in Google)</label>
+                            <textarea
+                              name="seo_description"
+                              defaultValue={seoSettings.description}
+                              required
+                              rows={3}
+                              maxLength={165}
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-600 resize-none"
+                            />
+                            <p className="text-[10px] text-[var(--text-muted)] mt-1">Recommended: 140–160 characters. Mention city, services, and a call-to-action.</p>
+                          </div>
+                        </div>
+
+                        {/* ---- Keywords ---- */}
+                        <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                            <h3 className="font-heading font-bold text-sm text-[var(--text-primary)] uppercase tracking-wider">Keywords</h3>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Core Keywords (comma separated)</label>
+                            <textarea
+                              name="seo_keywords"
+                              defaultValue={seoSettings.keywords}
+                              rows={4}
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-600 resize-none font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">➕ Add Extra Keywords (appended to above)</label>
+                            <textarea
+                              name="seo_extraKeywords"
+                              defaultValue={seoSettings.extraKeywords}
+                              rows={2}
+                              placeholder="e.g. best marketer noida, ads expert rajasthan..."
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-600 resize-none font-mono"
+                            />
+                            <p className="text-[10px] text-[var(--text-muted)] mt-1">Add new keywords here without touching the core list.</p>
+                          </div>
+                        </div>
+
+                        {/* ---- Open Graph (Facebook/WhatsApp share) ---- */}
+                        <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
+                            <h3 className="font-heading font-bold text-sm text-[var(--text-primary)] uppercase tracking-wider">Open Graph — Facebook &amp; WhatsApp Share Preview</h3>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">OG Title (title when shared on Facebook/WhatsApp)</label>
+                            <input
+                              name="seo_ogTitle"
+                              defaultValue={seoSettings.ogTitle}
+                              maxLength={90}
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">OG Description</label>
+                            <textarea
+                              name="seo_ogDescription"
+                              defaultValue={seoSettings.ogDescription}
+                              rows={2}
+                              maxLength={200}
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-600 resize-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* ---- Twitter Card ---- */}
+                        <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
+                            <h3 className="font-heading font-bold text-sm text-[var(--text-primary)] uppercase tracking-wider">Twitter / X Share Preview</h3>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Twitter Title</label>
+                            <input
+                              name="seo_twitterTitle"
+                              defaultValue={seoSettings.twitterTitle}
+                              maxLength={70}
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm font-semibold text-[var(--text-primary)] focus:outline-none focus:border-emerald-600"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1 uppercase">Twitter Description</label>
+                            <textarea
+                              name="seo_twitterDescription"
+                              defaultValue={seoSettings.twitterDescription}
+                              rows={2}
+                              maxLength={200}
+                              className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-emerald-600 resize-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* ---- Google Preview ---- */}
+                        <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                            <h3 className="font-heading font-bold text-sm text-[var(--text-primary)] uppercase tracking-wider">Live Google Preview</h3>
+                          </div>
+                          <div className="bg-white rounded-xl p-4 border border-gray-200 font-sans shadow-sm">
+                            <p className="text-[11px] text-[#202124] mb-0.5">shahidkhan.site › services</p>
+                            <p className="text-[#1a0dab] text-base font-medium leading-snug truncate">{seoSettings.title}</p>
+                            <p className="text-[#4d5156] text-xs mt-1 leading-relaxed line-clamp-2">{seoSettings.description}</p>
+                          </div>
+                          <p className="text-[10px] text-[var(--text-muted)]">Preview updates after saving. Actual Google snippet may differ slightly.</p>
+                        </div>
+
+                        {/* ---- Save Button ---- */}
+                        <div className="flex gap-3">
+                          <button
+                            type="submit"
+                            className="px-6 py-3 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-heading text-xs font-bold uppercase tracking-wider shadow-md cursor-pointer transition-all flex items-center gap-2"
+                          >
+                            🗃️ Save &amp; Apply SEO Settings
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm('Reset all SEO settings to default values?')) {
+                                setSeoSettings(defaultSEOSettings);
+                                localStorage.removeItem('site_seo_settings');
+                                applySEOToDocument(defaultSEOSettings);
+                                alert('SEO settings reset to defaults.');
+                              }
+                            }}
+                            className="px-5 py-3 rounded-xl border border-[var(--border-color)] text-xs font-bold cursor-pointer hover:bg-[var(--bg-hover)] transition-all"
+                          >
+                            ↺ Reset to Defaults
+                          </button>
+                        </div>
+
                       </form>
                     </div>
                   )}
