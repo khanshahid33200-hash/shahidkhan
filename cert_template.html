@@ -1,0 +1,171 @@
+import os
+import subprocess
+
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: 11in 8.5in; /* Landscape standard certificate size */
+      margin: 0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 1200px;
+      height: 850px;
+      background-color: #fbfbfb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1c1d1f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+    .cert-card {
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      padding: 60px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      position: relative;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .udemy-logo {
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #1c1d1f;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .udemy-logo-icon {
+      position: absolute;
+      top: -12px;
+      left: 0;
+      width: 24px;
+      height: 16px;
+    }
+    .meta-details {
+      text-align: right;
+      font-size: 12px;
+      color: #6a6f73;
+      line-height: 1.6;
+    }
+    .meta-details p span {
+      color: #6a6f73;
+    }
+    .content {
+      margin-top: 20px;
+    }
+    .sub-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #6a6f73;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .course-title {
+      font-size: 52px;
+      font-weight: 800;
+      color: #1c1d1f;
+      line-height: 1.15;
+      margin-bottom: 30px;
+      max-width: 95%;
+    }
+    .instructors {
+      font-size: 16px;
+      color: #6a6f73;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .instructors strong {
+      color: #1c1d1f;
+      font-weight: 700;
+    }
+    .footer {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .recipient-name {
+      font-size: 48px;
+      font-weight: 800;
+      color: #1c1d1f;
+      margin-bottom: 24px;
+    }
+    .course-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 15px;
+      color: #6a6f73;
+    }
+    .course-stats div span {
+      color: #1c1d1f;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="cert-card">
+    <div class="header">
+      <div class="logo-container">
+        <svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 10 L24 22 L36 10" stroke="#a435f0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="0" y="52" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-weight="800" font-size="44" fill="#1c1d1f">ûdemy</text>
+        </svg>
+      </div>
+      <div class="meta-details">
+        <p>Certificate no: <span>UC-95eaf934-2a3e-452a-b9e1-ec1406b220a1</span></p>
+        <p>Certificate url: <span>ude.my/UC-95eaf934-2a3e-452a-b9e1-ec1406b220a1</span></p>
+        <p>Reference Number: <span>0004</span></p>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="sub-title">CERTIFICATE OF COMPLETION</div>
+      <h1 class="course-title">Mega Digital Marketing Course A-Z: 32 Courses in 1 + Updates</h1>
+      <div class="instructors">
+        <span>Instructors</span> <strong>Pouya Eti • Digital Marketing Expert</strong>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <h2 class="recipient-name">Shahid Khan</h2>
+        <div class="course-stats">
+          <div>Date <span>Aug. 4, 2026</span></div>
+          <div>Length <span>83.5 total hours</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+with open("cert_template.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("Wrote cert_template.html")
