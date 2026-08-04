@@ -1339,15 +1339,6 @@ export default function App() {
                         <span>Request a Call Back</span>
                       </button>
 
-                      <a 
-                        href="/udemy_digital_marketing_certificate.pdf" 
-                        download="Shahid_Khan_Udemy_Digital_Marketing_Certificate.pdf"
-                        className="px-5 py-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-purple-500/20 transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
-                      >
-                        <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        <span>Download Certificate PDF</span>
-                      </a>
-
                       <button 
                         onClick={() => navigateTo('projects')}
                         className="px-5 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-heading text-xs sm:text-sm font-bold tracking-wide hover:bg-[var(--bg-hover)] transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
