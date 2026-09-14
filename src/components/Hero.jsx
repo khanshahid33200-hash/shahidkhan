@@ -37,8 +37,8 @@ const Hero = () => {
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#fcf8f5]/85 via-[#fcf8f5]/70 to-[#fcf8f5]/90 pointer-events-none" />
 
       {/* Liquid Blurred Orange Background Metablobs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff6b00]/20 rounded-full blur-[110px] animate-liquid-orange-1 pointer-events-none z-0" />
-      <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-[#ff8a00]/15 rounded-full blur-[130px] animate-liquid-orange-2 pointer-events-none z-0" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff6b00]/15 rounded-full blur-[60px] animate-liquid-orange-1 pointer-events-none z-0" />
+      <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-[#ff8a00]/10 rounded-full blur-[70px] animate-liquid-orange-2 pointer-events-none z-0" />
 
       {/* 3D Background Canvas */}
       <Hero3DCanvas />
@@ -73,6 +73,8 @@ const Hero = () => {
               src="/shahid_photo.png"
               alt="Shahid Khan - Digital Marketing Expert Jaipur"
               className="w-full h-full object-cover"
+              fetchPriority="high"
+              decoding="async"
             />
           </div>
           <p className="text-base sm:text-lg text-[#5e5249] font-normal leading-relaxed text-center sm:text-left">

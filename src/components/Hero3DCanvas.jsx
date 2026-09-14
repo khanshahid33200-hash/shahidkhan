@@ -6,7 +6,7 @@ const Hero3DCanvas = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     let animationFrameId;
 
     let width = (canvas.width = canvas.parentElement.offsetWidth);
@@ -18,20 +18,20 @@ const Hero3DCanvas = () => {
       height = canvas.height = canvas.parentElement.offsetHeight;
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
 
-    // 3D Particles Mesh parameters
+    // 3D Particles Mesh parameters (optimized for 60fps performance)
     const points = [];
-    const numPoints = 85;
+    const numPoints = 38;
     for (let i = 0; i < numPoints; i++) {
       points.push({
-        x: (Math.random() - 0.5) * 600,
-        y: (Math.random() - 0.5) * 600,
-        z: (Math.random() - 0.5) * 600,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-        vz: (Math.random() - 0.5) * 0.8,
-        radius: Math.random() * 2.5 + 1.2,
+        x: (Math.random() - 0.5) * 500,
+        y: (Math.random() - 0.5) * 500,
+        z: (Math.random() - 0.5) * 500,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        vz: (Math.random() - 0.5) * 0.6,
+        radius: Math.random() * 2 + 1,
       });
     }
 
@@ -39,19 +39,27 @@ const Hero3DCanvas = () => {
     let mouseY = 0;
     const handleMouseMove = (e) => {
       const rect = canvas.getBoundingClientRect();
-      mouseX = (e.clientX - rect.left - width / 2) * 0.001;
-      mouseY = (e.clientY - rect.top - height / 2) * 0.001;
+      mouseX = (e.clientX - rect.left - width / 2) * 0.0008;
+      mouseY = (e.clientY - rect.top - height / 2) * 0.0008;
     };
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     let angleX = 0;
     let angleY = 0;
+    let lastTime = 0;
 
-    const render = () => {
+    const render = (time) => {
+      // Throttle rendering slightly to prevent GPU overheat
+      if (time - lastTime < 16) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+      lastTime = time;
+
       ctx.clearRect(0, 0, width, height);
 
-      angleX += 0.003 + mouseY * 0.05;
-      angleY += 0.005 + mouseX * 0.05;
+      angleX += 0.002 + mouseY * 0.03;
+      angleY += 0.003 + mouseX * 0.03;
 
       const cosX = Math.cos(angleX);
       const sinX = Math.sin(angleX);
@@ -66,9 +74,9 @@ const Hero3DCanvas = () => {
         p.y += p.vy;
         p.z += p.vz;
 
-        if (Math.abs(p.x) > 300) p.vx *= -1;
-        if (Math.abs(p.y) > 300) p.vy *= -1;
-        if (Math.abs(p.z) > 300) p.vz *= -1;
+        if (Math.abs(p.x) > 250) p.vx *= -1;
+        if (Math.abs(p.y) > 250) p.vy *= -1;
+        if (Math.abs(p.z) > 250) p.vz *= -1;
 
         // 3D Rotation
         let y1 = p.y * cosX - p.z * sinX;
@@ -77,32 +85,33 @@ const Hero3DCanvas = () => {
         let z2 = -p.x * sinY + z1 * cosY;
 
         // Perspective Projection
-        const fov = 400;
-        const scale = fov / (fov + z2 + 400);
+        const fov = 380;
+        const scale = fov / (fov + z2 + 380);
         const xProj = x2 * scale + width / 2;
         const yProj = y1 * scale + height / 2;
 
         projected.push({ x: xProj, y: yProj, scale, radius: p.radius });
 
         // Draw Liquid Orange Point
-        const alpha = Math.min(1, Math.max(0.15, scale * 0.9));
+        const alpha = Math.min(0.85, Math.max(0.12, scale * 0.8));
         ctx.fillStyle = `rgba(255, 107, 0, ${alpha})`;
         ctx.beginPath();
         ctx.arc(xProj, yProj, p.radius * scale, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Draw mesh connection lines
+      // Draw mesh connection lines (optimized threshold)
       for (let i = 0; i < projected.length; i++) {
         for (let j = i + 1; j < projected.length; j++) {
           const dx = projected[i].x - projected[j].x;
           const dy = projected[i].y - projected[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const distSq = dx * dx + dy * dy;
 
-          if (dist < 110) {
-            const alpha = (1 - dist / 110) * 0.28;
+          if (distSq < 8100) { // 90px threshold squared
+            const dist = Math.sqrt(distSq);
+            const alpha = (1 - dist / 90) * 0.22;
             ctx.strokeStyle = `rgba(255, 138, 0, ${alpha})`;
-            ctx.lineWidth = 0.9;
+            ctx.lineWidth = 0.8;
             ctx.beginPath();
             ctx.moveTo(projected[i].x, projected[i].y);
             ctx.lineTo(projected[j].x, projected[j].y);
@@ -114,7 +123,7 @@ const Hero3DCanvas = () => {
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render();
+    animationFrameId = requestAnimationFrame(render);
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -124,7 +133,7 @@ const Hero3DCanvas = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none opacity-70">
+    <div className="absolute inset-0 w-full h-full pointer-events-none opacity-60">
       <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
