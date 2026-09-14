@@ -5,7 +5,7 @@
     <link rel="icon" type="image/png" href="/FAVICON.png" />
     <link rel="apple-touch-icon" href="/FAVICON.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#064e3b" />
+    <meta name="theme-color" content="#ff6b00" />
 
     <!-- ===== PERFORMANCE HINTS (Core Web Vitals = Ranking Signal) ===== -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,6 +14,8 @@
     <link rel="preconnect" href="https://connect.facebook.net" />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
     <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+    <!-- LCP Preload: Hero photo is the Largest Contentful Paint element -->
+    <link rel="preload" href="/shahid_photo.png" as="image" fetchpriority="high" />
 
     <!-- ===== GOOGLE ADSENSE ===== -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6421458983673062" crossorigin="anonymous"></script>
@@ -434,9 +436,14 @@
         s = b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t, s);
       })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1234567890');
+      fbq('track', 'PageView');
     </script>
   </head>
   <body>
+    <noscript>
+      <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1" alt="" />
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
