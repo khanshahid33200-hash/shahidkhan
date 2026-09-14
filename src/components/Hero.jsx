@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDown, ArrowUpRight, Sparkles, Target, BarChart3, Code, Award } from 'lucide-react';
-import Hero3DCanvas from './Hero3DCanvas';
 
 const Hero = () => {
   const containerVariants = {
@@ -39,9 +38,6 @@ const Hero = () => {
       {/* Liquid Blurred Orange Background Metablobs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff6b00]/15 rounded-full blur-[60px] animate-liquid-orange-1 pointer-events-none z-0" />
       <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-[#ff8a00]/10 rounded-full blur-[70px] animate-liquid-orange-2 pointer-events-none z-0" />
-
-      {/* 3D Background Canvas */}
-      <Hero3DCanvas />
 
       {/* Hero Content Container */}
       <motion.div
